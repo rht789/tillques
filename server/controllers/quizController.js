@@ -292,23 +292,15 @@ exports.validateQuizStep = async (req, res) => {
 
 exports.updateQuizMode = async (req, res) => {
   try {
-    const { quizID } = req.params;
+    const { id } = req.params;
     const { mode } = req.body;
 
-    console.log('Updating quiz mode:', { quizID, mode, userId: req.user.id });
-
-    // Validate mode
-    if (!['manual', 'ai'].includes(mode)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid mode. Must be either "manual" or "ai"'
-      });
-    }
+    console.log('Updating quiz mode:', { id, mode, userId: req.user.id }); // Debug log
 
     const quiz = await Quiz.findOne({
       where: { 
-        quizID,
-        createdBy: req.user.id
+        quizID: id,
+        createdBy: req.user.id 
       }
     });
 
@@ -332,7 +324,82 @@ exports.updateQuizMode = async (req, res) => {
     console.error('Error updating quiz mode:', error);
     res.status(500).json({
       success: false,
-      message: 'Error updating question mode',
+      message: 'Error updating quiz mode',
+      error: error.message
+    });
+  }
+};
+
+exports.updateQuizStep = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { step } = req.body;
+
+    const quiz = await Quiz.findOne({
+      where: { 
+        quizID: id,
+        createdBy: req.user.id 
+      }
+    });
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz not found'
+      });
+    }
+
+    await quiz.update({ currentStep: step });
+
+    res.status(200).json({
+      success: true,
+      data: quiz
+    });
+  } catch (error) {
+    console.error('Error updating quiz step:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating quiz step'
+    });
+  }
+};
+
+exports.createQuestion = async (req, res) => {
+  try {
+    const { id: quizID } = req.params;
+    const questionData = req.body;
+
+    // First, verify the quiz exists and belongs to the user
+    const quiz = await Quiz.findOne({
+      where: { 
+        quizID,
+        createdBy: req.user.id 
+      }
+    });
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz not found'
+      });
+    }
+
+    // Create the question
+    const question = await Question.create({
+      ...questionData,
+      quizID,
+      createdBy: req.user.id
+    });
+
+    res.status(201).json({
+      success: true,
+      data: question
+    });
+  } catch (error) {
+    console.error('Error creating question:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating question',
       error: error.message
     });
   }
