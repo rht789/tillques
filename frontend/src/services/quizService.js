@@ -2,15 +2,13 @@
 
 import api from './api';
 
-const getAllQuizzes = async () => {
+export const getAllQuizzes = async () => {
   try {
     const response = await api.get('/quizzes');
-    return response;
+    console.log('Quiz API Response:', response.data);
+    return response.data;
   } catch (error) {
-    console.error('Error in getAllQuizzes:', {
-      message: error.message,
-      response: error.response?.data
-    });
+    console.error('Error fetching quizzes:', error);
     throw error;
   }
 };
@@ -25,10 +23,21 @@ const deleteQuiz = async (quizId) => {
   return response.data;
 };
 
+const updateQuizMode = async (quizID, mode) => {
+  try {
+    const response = await api.put(`/api/v1/quizzes/${quizID}/mode`, { mode });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating quiz mode:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
 const quizService = {
   getAllQuizzes,
   createQuiz,
   deleteQuiz,
+  updateQuizMode,
   // ... other methods
 };
 

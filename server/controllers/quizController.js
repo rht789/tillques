@@ -7,7 +7,8 @@ const quizService = require('../services/quizService');
 // Get all quizzes
 exports.getQuizzes = async (req, res) => {
   try {
-    const userID = req.user.id; // From JWT token
+    const userID = req.user?.id;
+    
     if (!userID) {
       return res.status(401).json({
         success: false,
@@ -15,14 +16,28 @@ exports.getQuizzes = async (req, res) => {
       });
     }
 
+    console.log('Fetching quizzes for user:', userID);
+
     const quizzes = await quizService.listQuizzes(userID);
-    res.json(quizzes);
+    
+    console.log('Quizzes fetched successfully:', {
+      count: quizzes.data?.length,
+      success: quizzes.success
+    });
+    
+    return res.status(200).json(quizzes);
   } catch (error) {
-    console.error('Error in getQuizzes:', error);
-    res.status(500).json({
+    console.error('Quiz Controller Error:', {
+      message: error.message,
+      stack: error.stack,
+      sqlMessage: error.original?.sqlMessage,
+      sql: error.sql
+    });
+
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch quizzes',
-      error: error.message
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };
@@ -270,6 +285,54 @@ exports.validateQuizStep = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error validating quiz step',
+      error: error.message
+    });
+  }
+};
+
+exports.updateQuizMode = async (req, res) => {
+  try {
+    const { quizID } = req.params;
+    const { mode } = req.body;
+
+    console.log('Updating quiz mode:', { quizID, mode, userId: req.user.id });
+
+    // Validate mode
+    if (!['manual', 'ai'].includes(mode)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid mode. Must be either "manual" or "ai"'
+      });
+    }
+
+    const quiz = await Quiz.findOne({
+      where: { 
+        quizID,
+        createdBy: req.user.id
+      }
+    });
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz not found'
+      });
+    }
+
+    await quiz.update({ 
+      questionMode: mode,
+      currentStep: 'mode_selected'
+    });
+
+    res.status(200).json({
+      success: true,
+      data: quiz
+    });
+  } catch (error) {
+    console.error('Error updating quiz mode:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating question mode',
       error: error.message
     });
   }

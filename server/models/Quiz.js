@@ -2,12 +2,11 @@
 module.exports = (sequelize, DataTypes) => {
   const Quiz = sequelize.define('Quiz', {
     quizID: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.CHAR(36),
       primaryKey: true
     },
     quizName: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       allowNull: false
     },
     visibility: {
@@ -30,6 +29,15 @@ module.exports = (sequelize, DataTypes) => {
     startAt: {
       type: DataTypes.DATE,
       allowNull: false
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW
     },
     description: {
       type: DataTypes.TEXT,

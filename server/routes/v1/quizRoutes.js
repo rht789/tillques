@@ -15,4 +15,7 @@ router.get('/:id', quizController.getQuiz);
 router.put('/:id', quizController.updateQuiz);
 router.delete('/:id', quizController.deleteQuiz);
 
+// Update quiz mode route
+router.put('/:quizID/mode', authenticateToken, quizController.updateQuizMode);
+
 module.exports = router;

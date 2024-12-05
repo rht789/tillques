@@ -3,68 +3,31 @@
 const Joi = require('joi');
 
 const validateQuestion = (req, res, next) => {
-  const { 
-    questionText, 
-    questionType, 
-    difficulty,
-    timeLimit,
-    correctAnswer,
-    options 
-  } = req.body;
+  const schema = Joi.object({
+    questionText: Joi.string().required(),
+    questionType: Joi.string().valid('MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_IN_THE_BLANKS').required(),
+    difficulty: Joi.string().valid('easy', 'medium', 'hard').required(),
+    timeLimit: Joi.number().min(5).max(300).required(),
+    source: Joi.string().valid('manual', 'AI').required(),
+    options: Joi.when('questionType', {
+      is: 'MCQ',
+      then: Joi.array().items(
+        Joi.object({
+          optionText: Joi.string().required(),
+          isCorrect: Joi.boolean().required()
+        })
+      ).min(2).required(),
+      otherwise: Joi.optional()
+    })
+  });
 
-  console.log('Validating question data:', req.body); // Debug log
-
-  // Basic validation
-  if (!questionText || !questionType || !difficulty) {
+  const { error } = schema.validate(req.body);
+  if (error) {
     return res.status(400).json({
       success: false,
-      message: 'Missing required fields: questionText, questionType, or difficulty'
+      message: error.details[0].message
     });
   }
-
-  // Type-specific validation
-  switch (questionType) {
-    case 'TRUE_FALSE':
-      if (typeof correctAnswer !== 'boolean') {
-        return res.status(400).json({
-          success: false,
-          message: 'True/False questions require a boolean correctAnswer'
-        });
-      }
-      break;
-
-    case 'MCQ':
-      if (!Array.isArray(options) || options.length < 2) {
-        return res.status(400).json({
-          success: false,
-          message: 'MCQ questions require at least 2 options'
-        });
-      }
-      if (!options.some(opt => opt.isCorrect)) {
-        return res.status(400).json({
-          success: false,
-          message: 'MCQ questions must have at least one correct option'
-        });
-      }
-      break;
-
-    case 'SHORT_ANSWER':
-    case 'FILL_IN_THE_BLANKS':
-      if (!correctAnswer || typeof correctAnswer !== 'string') {
-        return res.status(400).json({
-          success: false,
-          message: `${questionType} questions require a correct answer`
-        });
-      }
-      break;
-
-    default:
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid question type'
-      });
-  }
-
   next();
 };
 

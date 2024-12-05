@@ -24,7 +24,13 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASS, {
   host: DB_HOST,
   port: DB_PORT,
   dialect: DB_DIALECT,
-  logging: false, // Set to `console.log` for debugging SQL queries
+  logging: console.log, // Enable SQL query logging
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  }
 });
 
 // Test the database connection
@@ -32,9 +38,18 @@ const testConnection = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connection established successfully.');
+    
+    // Log database details (in development only)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Database config:', {
+        name: process.env.DB_NAME,
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER
+      });
+    }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    process.exit(1); // Exit if database connection fails
   }
 };
 

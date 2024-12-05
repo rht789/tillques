@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const userRoutes = require('./routes/v1/userRoutes');
 const quizRoutes = require('./routes/v1/quizRoutes');
+const questionRoutes = require('./routes/v1/questionRoutes');
 require('dotenv').config();
 
 const app = express();
@@ -18,21 +19,25 @@ app.use(cors({
 // Body parser middleware
 app.use(express.json());
 
-// Test route
-app.get('/test', (req, res) => {
-  res.json({ message: 'Server is running' });
+// Add this before your routes
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
 });
 
 // API routes
 app.use('/api/v1/quizzes', quizRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/questions', questionRoutes);
 
-// Basic error handling
+// Error handling middleware (add this after your routes)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Internal server error' 
+  console.error('Global Error Handler:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
 });
 

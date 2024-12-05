@@ -1,7 +1,7 @@
 // src/components/ErrorBoundary.js
 
 import React from 'react';
-import { Typography, Container } from '@mui/material';
+import { toast } from 'react-toastify';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -10,30 +10,27 @@ class ErrorBoundary extends React.Component {
   }
 
   static getDerivedStateFromError(error) {
-    // Update state to show fallback UI
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    // You can log error details to an error reporting service here
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('Error Boundary caught an error:', error, errorInfo);
+    toast.error('Something went wrong. Please try again.');
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <Container>
-          <Typography variant="h4" gutterBottom>
-            Something went wrong.
-          </Typography>
-          <Typography variant="body1">
-            Please try refreshing the page or contact support if the problem persists.
-          </Typography>
-        </Container>
+        <div className="error-boundary">
+          <h2>Something went wrong.</h2>
+          <button onClick={() => window.location.reload()}>
+            Refresh Page
+          </button>
+        </div>
       );
     }
 
-    return this.props.children; 
+    return this.props.children;
   }
 }
 

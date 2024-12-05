@@ -46,26 +46,46 @@ exports.getQuizById = async (quizID) => {
 
 // List all quizzes
 exports.listQuizzes = async (userID) => {
-  if (!userID) {
-    throw new Error('User ID is required');
+  try {
+    if (!userID) {
+      throw new Error('User ID is required');
+    }
+
+    const quizzes = await Quiz.findAll({
+      where: { createdBy: userID },
+      attributes: [
+        'quizID',
+        'quizName',
+        'visibility',
+        'topicID',
+        'createdBy',
+        'maxParticipants',
+        'startAt',
+        'updatedAt',
+        'createdAt',
+        'description',
+        'questionMode',
+        'status',
+        'currentStep'
+      ],
+      include: [
+        {
+          model: Topic,
+          as: 'topic',
+          attributes: ['topicID', 'topicName']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    return {
+      success: true,
+      data: quizzes
+    };
+  } catch (error) {
+    console.error('Quiz Service Error:', error);
+    throw error;
   }
-
-  const quizzes = await Quiz.findAll({
-    where: { createdBy: userID },
-    include: [
-      {
-        model: Topic,
-        as: 'topic',
-        attributes: ['topicID', 'topicName']
-      }
-    ],
-    order: [['createdAt', 'DESC']]
-  });
-
-  return {
-    success: true,
-    data: quizzes
-  };
 };
 
 // Add a question to a quiz

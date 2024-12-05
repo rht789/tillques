@@ -6,125 +6,57 @@ const questionService = require('../services/questionService');
 
 // Create a new question under a specific quiz
 exports.createQuestion = async (req, res) => {
+  const { quizID } = req.params;
+  const transaction = await sequelize.transaction();
+
   try {
-    const { quizID } = req.params;
-    const { 
-      questionText, 
+    const {
+      questionText,
       questionType,
       difficulty,
       timeLimit,
-      correctAnswer,
+      source,
       options
     } = req.body;
 
-    console.log('Received data:', req.body);
-
-    // Validate required fields
-    if (!questionText || !questionType || !difficulty) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields'
-      });
-    }
-
-    // Find the quiz
-    const quiz = await Quiz.findOne({
-      where: { 
-        quizID,
-        createdBy: req.user.id 
-      }
-    });
-
-    if (!quiz) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quiz not found'
-      });
-    }
-
-    // Create base question
+    // Create question
     const question = await Question.create({
       questionID: uuidv4(),
       questionText,
       questionType,
-      source: 'manual',
+      source,
       difficulty,
-      timeLimit: parseInt(timeLimit) || 30
-    });
+      timeLimit
+    }, { transaction });
 
-    // Handle different question types
-    switch (questionType) {
-      case 'TRUE_FALSE':
-        // Create True/False options
-        await Promise.all([
-          Option.create({
-            optionID: uuidv4(),
-            questionID: question.questionID,
-            optionText: 'True',
-            isCorrect: correctAnswer === true
-          }),
-          Option.create({
-            optionID: uuidv4(),
-            questionID: question.questionID,
-            optionText: 'False',
-            isCorrect: correctAnswer === false
-          })
-        ]);
-        await question.update({ correctAns: correctAnswer.toString() });
-        break;
-
-      case 'MCQ':
-        // Create MCQ options
-        if (!Array.isArray(options) || options.length < 2) {
-          throw new Error('MCQ questions require at least 2 options');
-        }
-        await Promise.all(options.map(opt => 
-          Option.create({
-            optionID: uuidv4(),
-            questionID: question.questionID,
-            optionText: opt.text,
-            isCorrect: opt.isCorrect
-          })
-        ));
-        break;
-
-      case 'SHORT_ANSWER':
-      case 'FILL_IN_THE_BLANKS':
-        // Store correct answer directly
-        if (!correctAnswer) {
-          throw new Error(`${questionType} requires a correct answer`);
-        }
-        await question.update({ correctAns: correctAnswer });
-        break;
-
-      default:
-        throw new Error('Invalid question type');
+    // If MCQ, create options
+    if (questionType === 'MCQ' && Array.isArray(options)) {
+      await Promise.all(options.map(option =>
+        Option.create({
+          optionID: uuidv4(),
+          questionID: question.questionID,
+          optionText: option.optionText,
+          isCorrect: option.isCorrect
+        }, { transaction })
+      ));
     }
 
     // Associate question with quiz
-    await quiz.addQuestion(question);
+    await question.addQuiz(quizID, { transaction });
 
-    // Fetch the created question with its options
-    const createdQuestion = await Question.findOne({
-      where: { questionID: question.questionID },
-      include: [{
-        model: Option,
-        as: 'options'
-      }]
-    });
+    await transaction.commit();
 
     res.status(201).json({
       success: true,
       message: 'Question created successfully',
-      data: createdQuestion
+      data: question
     });
-
   } catch (error) {
+    await transaction.rollback();
     console.error('Error creating question:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creating question',
-      error: error.message
+      message: 'Error creating question'
     });
   }
 };

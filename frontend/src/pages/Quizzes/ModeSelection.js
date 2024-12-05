@@ -12,20 +12,28 @@ const ModeSelection = () => {
     try {
       console.log('Selected mode:', mode);
       
-      // If the API endpoints aren't ready yet, we can temporarily skip them
       try {
         await quizService.updateQuizMode(quizID, mode);
         await quizService.validateQuizStep(quizID, 'mode_selected');
+        toast.success('Mode selected successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
       } catch (apiError) {
         console.warn('API endpoints not ready:', apiError);
-        // Continue with navigation even if API calls fail
+        toast.warning('Proceeding without backend confirmation', {
+          position: "top-right",
+          autoClose: 3000,
+        });
       }
       
       // Navigate based on mode selection
       if (mode === 'manual') {
-        const path = `/quizzes/${quizID}/create-question`;
-        console.log('Navigating to:', path);
-        navigate(path);
+        navigate(`/quizzes/${quizID}/create-question`);
       } else if (mode === 'ai') {
         navigate(`/quizzes/${quizID}/ai-generation`);
       }

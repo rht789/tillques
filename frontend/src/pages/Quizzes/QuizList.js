@@ -39,8 +39,11 @@ const QuizList = () => {
     try {
       setLoading(true);
       const response = await quizService.getAllQuizzes();
-      if (response.data.success) {
-        setQuizzes(response.data.data || []);
+      console.log('Response from server:', response); // Debug log
+      
+      // Check if response has the data property
+      if (response && response.success) {
+        setQuizzes(response.data || []);
       } else {
         setError('Failed to fetch quizzes');
         toast.error('Error loading quizzes');

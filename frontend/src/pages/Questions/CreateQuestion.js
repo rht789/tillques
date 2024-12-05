@@ -149,40 +149,39 @@ const CreateQuestion = () => {
     e.preventDefault();
     
     try {
+      // Validate form data
+      if (!formData.questionText) {
+        setErrors({ ...errors, questionText: 'Question text is required' });
+        return;
+      }
+
+      // For MCQ, ensure at least one option is marked as correct
+      if (formData.questionType === 'MCQ') {
+        if (!formData.options.some(opt => opt.isCorrect)) {
+          toast.error('Please select at least one correct answer');
+          return;
+        }
+      }
+
       const questionData = {
         questionText: formData.questionText,
         questionType: formData.questionType,
         difficulty: formData.difficulty,
         timeLimit: formData.timeLimit,
+        options: formData.options.map(opt => ({
+          text: opt.text,
+          isCorrect: opt.isCorrect
+        }))
       };
 
-      // Add type-specific data
-      switch (formData.questionType) {
-        case 'TRUE_FALSE':
-          questionData.correctAnswer = formData.options.some(opt => opt.isCorrect) && formData.options.find(opt => opt.isCorrect).text === 'True';
-          break;
-          
-        case 'MCQ':
-          questionData.options = formData.options.map(opt => ({
-            text: opt.text,
-            isCorrect: opt.isCorrect
-          }));
-          break;
-          
-        case 'SHORT_ANSWER':
-        case 'FILL_IN_THE_BLANKS':
-          questionData.correctAnswer = formData.options.find(opt => opt.isCorrect).text;
-          break;
-      }
-
-      console.log('Submitting question data:', questionData); // Debug log
+      console.log('Submitting question data:', questionData);
       
       await questionService.createQuestion(quizID, questionData);
-      // Handle successful creation
+      toast.success('Question created successfully!');
       navigate(`/quizzes/${quizID}`);
     } catch (error) {
       console.error('Error creating question:', error);
-      // Handle error (show error message to user)
+      toast.error('Failed to create question. Please try again.');
     }
   };
 
