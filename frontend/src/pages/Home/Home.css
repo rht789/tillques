@@ -170,3 +170,38 @@ main {
   font-size: 24px;
   line-height: 1.5;
 }
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.action-button {
+  min-width: 180px !important;
+  padding: 0.75rem 2rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  font-size: 1rem !important;
+  border-radius: 8px !important;
+}
+
+.dashboard-btn {
+  background-color: #7556f0 !important;
+}
+
+.dashboard-btn:hover {
+  background-color: #6040e0 !important;
+}
+
+.create-quiz-btn {
+  background-color: #ffffff !important;
+  color: #7556f0 !important;
+  border: 2px solid #7556f0 !important;
+}
+
+.create-quiz-btn:hover {
+  background-color: #f8f6ff !important;
+  border: 2px solid #7556f0 !important;
+}

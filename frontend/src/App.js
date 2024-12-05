@@ -1,9 +1,11 @@
 // src/App.js
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword';
+import ResetPassword from './pages/Auth/ResetPassword';
 import QuizList from './pages/Quizzes/QuizList';
 import CreateQuiz from './pages/Quizzes/CreateQuiz';
 import CreateQuestion from './pages/Questions/CreateQuestion';
@@ -27,9 +29,13 @@ function App() {
         <Navbar />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={isAuthenticated ? <Home /> : <LandingPage />} />
+            {/* Public Routes */}
+            <Route path="/" element={isAuthenticated ? <Navigate to="/home" /> : <LandingPage />} />
+            <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

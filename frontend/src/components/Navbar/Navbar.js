@@ -22,14 +22,22 @@ const Navbar = () => {
     navigate('/');
   };
 
+  const handleLogoClick = () => {
+    if (isAuthenticated) {
+      navigate('/home');
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="nav-container">
         {/* Logo Section */}
-        <Link to="/" className="brand">
+        <div onClick={handleLogoClick} className="brand" style={{ cursor: 'pointer' }}>
           <img src={logo} alt="QuizMaster" className="brand-logo" />
           <span className="brand-text">QuizMaster</span>
-        </Link>
+        </div>
 
         {/* Right Section */}
         <div className="nav-items">
@@ -92,7 +100,7 @@ const Navbar = () => {
                 Log In
               </Link>
               <Link 
-                to="/signup"
+                to="/register"
                 className="signup-button"
               >
                 Sign Up

@@ -50,11 +50,33 @@ const Home = () => {
               </span>!
             </h1>
             <p>Ready to challenge yourself with some quizzes?</p>
-            <Link to="/dashboard">
-              <Button variant="contained" className="dashboard-btn">
+            <div className="hero-buttons">
+              <Button 
+                variant="contained" 
+                component={Link} 
+                to="/dashboard"
+                className="action-button dashboard-btn"
+              >
                 Go to Dashboard
               </Button>
-            </Link>
+              <Button 
+                variant="outlined" 
+                component={Link} 
+                to="/create-quiz"
+                className="action-button create-quiz-btn"
+                sx={{
+                  backgroundColor: '#ffffff',
+                  color: '#7556f0',
+                  border: '2px solid #7556f0',
+                  '&:hover': {
+                    backgroundColor: '#f8f6ff',
+                    border: '2px solid #7556f0',
+                  }
+                }}
+              >
+                Create Quiz
+              </Button>
+            </div>
           </Container>
         </section>
 
