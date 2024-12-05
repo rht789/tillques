@@ -6,19 +6,17 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import QuizList from './pages/Quizzes/QuizList';
 import CreateQuiz from './pages/Quizzes/CreateQuiz';
+import CreateQuestion from './pages/Questions/CreateQuestion';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Home from './pages/Home/Home';
 import Dashboard from './pages/Dashboard/Dashboard';
+import ModeSelection from './pages/Quizzes/ModeSelection';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
-import CreateQuestion from './pages/Questions/CreateQuestion';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import './App.css';
-import ModeSelection from './pages/Quizzes/ModeSelection';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -38,6 +36,7 @@ function App() {
             <Route path="/quizzes" element={<ProtectedRoute><QuizList /></ProtectedRoute>} />
             <Route path="/create-quiz" element={<ProtectedRoute><CreateQuiz /></ProtectedRoute>} />
             <Route path="/quizzes/:quizID/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
+            <Route path="/quizzes/:quizID/create-question" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
             {/* ... other routes ... */}
           </Routes>
         </main>
