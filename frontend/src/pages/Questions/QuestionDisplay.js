@@ -9,7 +9,8 @@ import {
   FormControlLabel,
   TextField,
   Box,
-  CircularProgress
+  CircularProgress,
+  Chip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,6 +32,7 @@ const QuestionDisplay = () => {
       try {
         setLoading(true);
         const response = await questionService.getQuizQuestions(quizId);
+        console.log('Fetched questions:', response.data);
         setQuestions(response.data || []);
         setError(null);
       } catch (error) {
@@ -71,113 +73,130 @@ const QuestionDisplay = () => {
   };
 
   const renderQuestion = (question) => {
-    switch (question.type) {
-      case "MCQ":
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
-              {question.questionText}
-            </Typography>
-            <RadioGroup name={question.id}>
-              {question.options?.map((option, index) => (
-                <FormControlLabel
-                  key={index}
-                  value={option}
-                  control={<Radio disabled />}
-                  label={option}
-                  sx={{
-                    '& .MuiFormControlLabel-label': {
-                      color: '#271362'
-                    },
-                    bgcolor: '#f4f3ff',
-                    mb: 1,
-                    borderRadius: 1,
-                    px: 2,
-                    '&:hover': {
-                      bgcolor: '#ebeafd'
-                    }
-                  }}
-                />
-              ))}
-            </RadioGroup>
-          </Box>
-        );
-
-      case "TRUE_FALSE":
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
-              {question.questionText}
-            </Typography>
-            <RadioGroup row name={question.id}>
-              <FormControlLabel
-                value="true"
-                control={<Radio disabled />}
-                label="True"
-                sx={{ mr: 4 }}
-              />
-              <FormControlLabel
-                value="false"
-                control={<Radio disabled />}
-                label="False"
-              />
-            </RadioGroup>
-          </Box>
-        );
-
-      case "FILL_IN_THE_BLANKS":
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {question.questionText.split("_____").map((part, index, array) => (
-                <React.Fragment key={index}>
-                  {part}
-                  {index < array.length - 1 && (
-                    <TextField
-                      disabled
-                      variant="standard"
-                      sx={{
-                        mx: 1,
-                        width: '100px',
-                        '& .MuiInput-underline:before': {
-                          borderBottomColor: '#6d40e7'
-                        }
-                      }}
-                    />
-                  )}
-                </React.Fragment>
-              ))}
-            </Typography>
-          </Box>
-        );
-
-      case "SHORT_ANSWER":
-        return (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
-              {question.questionText}
-            </Typography>
-            <TextField
-              fullWidth
-              multiline
-              rows={4}
-              disabled
-              placeholder="Enter your answer here..."
+    return (
+      <Box>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 2 
+        }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Chip 
+              label={`${question.timeLimit}s`}
+              size="small"
               sx={{
-                bgcolor: '#f4f3ff',
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': {
-                    borderColor: '#e3e3e3',
-                  },
+                backgroundColor: '#ebeafd',
+                color: '#412191',
+                '& .MuiChip-label': {
+                  fontWeight: 500
+                }
+              }}
+            />
+            <Chip 
+              label={question.difficulty.charAt(0).toUpperCase() + question.difficulty.slice(1)}
+              size="small"
+              sx={{
+                backgroundColor: '#ebeafd',
+                color: '#412191',
+                '& .MuiChip-label': {
+                  fontWeight: 500
                 }
               }}
             />
           </Box>
-        );
+        </Box>
 
-      default:
-        return null;
-    }
+        {(() => {
+          switch (question.questionType) {
+            case "MCQ":
+              return (
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
+                    {question.questionText}
+                  </Typography>
+                  <RadioGroup name={`question-${question.questionID}`}>
+                    {question.options?.map((option) => (
+                      <FormControlLabel
+                        key={option.optionID}
+                        value={option.optionText}
+                        control={
+                          <Radio 
+                            checked={option.isCorrect}
+                            disabled 
+                          />
+                        }
+                        label={option.optionText}
+                        sx={{
+                          '& .MuiFormControlLabel-label': {
+                            color: '#271362'
+                          },
+                          bgcolor: '#f4f3ff',
+                          mb: 1,
+                          borderRadius: 1,
+                          px: 2,
+                          '&:hover': {
+                            bgcolor: '#ebeafd'
+                          }
+                        }}
+                      />
+                    ))}
+                  </RadioGroup>
+                </Box>
+              );
+
+            case "TRUE_FALSE":
+              return (
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
+                    {question.questionText}
+                  </Typography>
+                  <RadioGroup row name={`question-${question.questionID}`}>
+                    {question.options?.map((option) => (
+                      <FormControlLabel
+                        key={option.optionID}
+                        value={option.optionText}
+                        control={
+                          <Radio 
+                            checked={option.isCorrect}
+                            disabled 
+                          />
+                        }
+                        label={option.optionText}
+                        sx={{ mr: 4 }}
+                      />
+                    ))}
+                  </RadioGroup>
+                </Box>
+              );
+
+            case "FILL_IN_THE_BLANKS":
+            case "SHORT_ANSWER":
+              return (
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 500, mb: 2 }}>
+                    {question.questionText}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: 'text.secondary',
+                      bgcolor: '#f4f3ff',
+                      p: 2,
+                      borderRadius: 1
+                    }}
+                  >
+                    Correct Answer: {question.correctAns}
+                  </Typography>
+                </Box>
+              );
+
+            default:
+              return null;
+          }
+        })()}
+      </Box>
+    );
   };
 
   const questionTypes = ["MCQ", "TRUE_FALSE", "FILL_IN_THE_BLANKS", "SHORT_ANSWER"];
@@ -246,17 +265,20 @@ const QuestionDisplay = () => {
                       pt: 2,
                       borderTop: '1px solid #e3e3e3'
                     }}>
-                      <Box>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
                           startIcon={<EditIcon />}
                           onClick={() => handleEdit(question.questionID)}
+                          className="edit-button"
+                          variant="outlined"
+                          size="small"
                           sx={{ 
-                            mr: 1,
-                            color: '#6d40e7',
-                            borderColor: '#6d40e7',
+                            borderColor: '#7556f0',
+                            color: '#7556f0',
+                            textTransform: 'none',
                             '&:hover': {
-                              borderColor: '#4e26b1',
-                              color: '#4e26b1'
+                              borderColor: '#6d40e7',
+                              backgroundColor: 'rgba(117, 86, 240, 0.04)'
                             }
                           }}
                         >
@@ -265,9 +287,17 @@ const QuestionDisplay = () => {
                         <Button
                           startIcon={<DeleteIcon />}
                           onClick={() => handleDelete(question.questionID)}
+                          className="delete-button"
+                          variant="outlined"
+                          size="small"
                           sx={{ 
-                            color: 'error.main',
-                            borderColor: 'error.main'
+                            borderColor: '#ff4d4f',
+                            color: '#ff4d4f',
+                            textTransform: 'none',
+                            '&:hover': {
+                              borderColor: '#ff4d4f',
+                              backgroundColor: 'rgba(255, 77, 79, 0.04)'
+                            }
                           }}
                         >
                           Delete
@@ -276,12 +306,16 @@ const QuestionDisplay = () => {
                       <Button
                         startIcon={<AddIcon />}
                         onClick={handleAddQuestion}
+                        className="add-button"
+                        variant="outlined"
+                        size="small"
                         sx={{ 
-                          color: '#6d40e7',
-                          borderColor: '#6d40e7',
+                          borderColor: '#7556f0',
+                          color: '#7556f0',
+                          textTransform: 'none',
                           '&:hover': {
-                            borderColor: '#4e26b1',
-                            color: '#4e26b1'
+                            borderColor: '#6d40e7',
+                            backgroundColor: 'rgba(117, 86, 240, 0.04)'
                           }
                         }}
                       >

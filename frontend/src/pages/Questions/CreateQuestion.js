@@ -253,6 +253,11 @@ const CreateQuestion = () => {
     ));
   };
 
+  // Add this handler function near your other handlers
+  const handleShowQuestions = () => {
+    navigate(`/quizzes/${quizId}/questions`);
+  };
+
   return (
     <div className="create-question-container">
       <div className="question-card">
@@ -427,21 +432,39 @@ const CreateQuestion = () => {
             </RadioGroup>
           </div>
 
-          {/* Save Button */}
-          <Button
-            variant="contained"
-            fullWidth
-            className="save-question-btn"
-            onClick={handleSubmit}
-            sx={{
-              backgroundColor: '#7556f0',
-              '&:hover': {
-                backgroundColor: '#6d40e7',
-              },
-            }}
-          >
-            Save Question
-          </Button>
+          {/* Save and Show Questions Buttons */}
+          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              className="save-question-btn"
+              onClick={handleSubmit}
+              sx={{
+                backgroundColor: '#7556f0',
+                '&:hover': {
+                  backgroundColor: '#6d40e7',
+                },
+              }}
+            >
+              Save Question
+            </Button>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={handleShowQuestions}
+              sx={{
+                borderColor: '#7556f0',
+                color: '#7556f0',
+                '&:hover': {
+                  borderColor: '#6d40e7',
+                  backgroundColor: 'rgba(117, 86, 240, 0.04)',
+                },
+              }}
+            >
+              Show Questions
+            </Button>
+          </Box>
         </form>
       </div>
 

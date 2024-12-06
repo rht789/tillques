@@ -131,7 +131,7 @@
 }
 
 /* Create button */
-.MuiButton-root {
+.create-quiz-container .MuiButton-root {
   background-color: #7556f0 !important;
   color: #f4f3ff !important;
   font-weight: 600 !important;
@@ -141,7 +141,7 @@
   margin-top: 1rem;
 }
 
-.MuiButton-root:hover {
+.create-quiz-container .MuiButton-root:hover {
   background-color: #6d40e7 !important;
 }
 
@@ -264,7 +264,7 @@
 }
 
 /* Create Quiz button styling */
-.MuiButton-root {
+.create-quiz-container .MuiButton-root {
   background-color: #7556f0 !important;
   color: #f4f3ff !important;
   font-weight: 600 !important;
@@ -275,6 +275,6 @@
   margin-top: 1.5rem !important;
 }
 
-.MuiButton-root:hover {
+.create-quiz-container .MuiButton-root:hover {
   background-color: #6d40e7 !important;
 }
