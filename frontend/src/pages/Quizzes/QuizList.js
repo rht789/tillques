@@ -126,6 +126,15 @@ const QuizList = () => {
     });
   };
 
+  const handleQuestionsClick = (quizId) => {
+    try {
+      navigate(`/quizzes/${quizId}/questions`);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      toast.error('Failed to navigate to questions');
+    }
+  };
+
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
@@ -209,7 +218,7 @@ const QuizList = () => {
                 </div>
                 <button 
                   className="questions-btn"
-                  onClick={() => navigate(`/quizzes/${quiz.quizID}/questions`)}
+                  onClick={() => handleQuestionsClick(quiz.quizID)}
                 >
                   <List size={16} />
                   Questions

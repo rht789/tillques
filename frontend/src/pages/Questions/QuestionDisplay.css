@@ -1,0 +1,29 @@
+.question-card {
+  transition: all 0.3s ease;
+}
+
+.question-card:hover {
+  box-shadow: 0 2px 8px rgba(109, 64, 231, 0.1);
+}
+
+.radio-option {
+  transition: background-color 0.3s ease;
+}
+
+.radio-option:hover {
+  background-color: #ebeafd;
+}
+
+.fill-blank-input {
+  border: none;
+  border-bottom: 2px solid #6d40e7;
+  background: transparent;
+  padding: 4px;
+  margin: 0 8px;
+  width: 100px;
+}
+
+.fill-blank-input:focus {
+  outline: none;
+  border-bottom-color: #4e26b1;
+} 

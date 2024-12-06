@@ -5,19 +5,27 @@ const Joi = require('joi');
 const validateQuestion = (req, res, next) => {
   const schema = Joi.object({
     questionText: Joi.string().required(),
-    questionType: Joi.string().valid('MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_IN_THE_BLANKS').required(),
-    difficulty: Joi.string().valid('easy', 'medium', 'hard').required(),
-    timeLimit: Joi.number().min(5).max(300).required(),
-    source: Joi.string().valid('manual', 'AI').required(),
+    questionType: Joi.string()
+      .valid('MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_IN_THE_BLANKS')
+      .required(),
+    difficulty: Joi.string()
+      .valid('easy', 'medium', 'hard')
+      .required(),
+    timeLimit: Joi.number()
+      .min(5)
+      .max(300)
+      .required(),
+    correctAns: Joi.string().allow(''),
     options: Joi.when('questionType', {
-      is: 'MCQ',
+      is: Joi.string().valid('MCQ', 'TRUE_FALSE'),
       then: Joi.array().items(
         Joi.object({
-          optionText: Joi.string().required(),
-          isCorrect: Joi.boolean().required()
+          text: Joi.string().required(),
+          isCorrect: Joi.boolean().required(),
+          id: Joi.any()
         })
       ).min(2).required(),
-      otherwise: Joi.optional()
+      otherwise: Joi.array().optional()
     })
   });
 

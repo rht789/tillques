@@ -1,6 +1,6 @@
 // src/pages/Questions/CreateQuestion.js
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import questionService from '../../services/questionService';
 import { toast } from 'react-toastify';
@@ -33,22 +33,28 @@ import {
 import './CreateQuestion.css';
 
 const CreateQuestion = () => {
-  const { quizID } = useParams();
+  const { quizId } = useParams();
   const navigate = useNavigate();
   
   // State management
   const [formData, setFormData] = useState({
     questionText: '',
     questionType: 'MCQ',
-    options: [
-      { id: '1', text: '', isCorrect: false },
-      { id: '2', text: '', isCorrect: false }
-    ],
-    timeLimit: 30,
+    options: [],
     difficulty: 'medium',
+    timeLimit: 30,
+    correctAns: ''
   });
   const [savedQuestions, setSavedQuestions] = useState([]);
   const [errors, setErrors] = useState({});
+
+  // Add validation for quizId
+  useEffect(() => {
+    if (!quizId) {
+      toast.error('Quiz ID is missing');
+      navigate('/quizzes');
+    }
+  }, [quizId, navigate]);
 
   // Handle question type change
   const handleTypeChange = (event) => {
@@ -64,8 +70,14 @@ const CreateQuestion = () => {
         break;
       case 'TRUE_FALSE':
         newOptions = [
-          { id: '1', text: 'True', isCorrect: false },
+          { id: '1', text: 'True', isCorrect: true },
           { id: '2', text: 'False', isCorrect: false }
+        ];
+        break;
+      case 'FILL_IN_THE_BLANKS':
+      case 'SHORT_ANSWER':
+        newOptions = [
+          { id: '1', text: '', isCorrect: true } // Single option for correct answer
         ];
         break;
       default:
@@ -92,13 +104,14 @@ const CreateQuestion = () => {
   };
 
   // Handle option text change
-  const handleOptionChange = (id, value) => {
-    setFormData({
-      ...formData,
-      options: formData.options.map(option =>
-        option.id === id ? { ...option, text: value } : option
-      ),
-    });
+  const handleOptionChange = (index, value) => {
+    if (formData.questionType === 'TRUE_FALSE') {
+      return; // Don't allow editing TRUE_FALSE options
+    }
+
+    const newOptions = [...formData.options];
+    newOptions[index] = { ...newOptions[index], text: value };
+    setFormData({ ...formData, options: newOptions });
   };
 
   // Handle correct answer toggle
@@ -113,6 +126,10 @@ const CreateQuestion = () => {
 
   // Add new option
   const addOption = () => {
+    if (formData.questionType === 'TRUE_FALSE') {
+      return; // Don't allow adding options for TRUE_FALSE
+    }
+    
     const newId = String(formData.options.length + 1);
     setFormData({
       ...formData,
@@ -145,44 +162,95 @@ const CreateQuestion = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     
-    try {
-      // Validate form data
-      if (!formData.questionText) {
-        setErrors({ ...errors, questionText: 'Question text is required' });
+    // Validation checks
+    if (formData.questionType === 'MCQ' || formData.questionType === 'TRUE_FALSE') {
+      const correctCount = formData.options.filter(opt => opt.isCorrect).length;
+      if (correctCount !== 1) {
+        toast.error(`Please select exactly one correct answer for ${formData.questionType === 'MCQ' ? 'MCQ' : 'True/False'} questions`);
         return;
       }
-
-      // For MCQ, ensure at least one option is marked as correct
-      if (formData.questionType === 'MCQ') {
-        if (!formData.options.some(opt => opt.isCorrect)) {
-          toast.error('Please select at least one correct answer');
-          return;
-        }
-      }
-
-      const questionData = {
-        questionText: formData.questionText,
-        questionType: formData.questionType,
-        difficulty: formData.difficulty,
-        timeLimit: formData.timeLimit,
-        options: formData.options.map(opt => ({
-          text: opt.text,
-          isCorrect: opt.isCorrect
-        }))
-      };
-
-      console.log('Submitting question data:', questionData);
-      
-      await questionService.createQuestion(quizID, questionData);
-      toast.success('Question created successfully!');
-      navigate(`/quizzes/${quizID}`);
-    } catch (error) {
-      console.error('Error creating question:', error);
-      toast.error('Failed to create question. Please try again.');
     }
+
+    try {
+      const response = await questionService.createQuestion(quizId, formData);
+      if (response.success) {
+        toast.success('Question created successfully');
+        // Reset form or handle success
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error creating question');
+    }
+  };
+
+  // Add this function to handle correct answer selection
+  const handleCorrectAnswerChange = (index) => {
+    const newOptions = formData.options.map((option, idx) => {
+      // For both MCQ and TRUE_FALSE, only allow one correct answer
+      if (formData.questionType === 'MCQ' || formData.questionType === 'TRUE_FALSE') {
+        return {
+          ...option,
+          isCorrect: idx === index // Only the clicked option will be true
+        };
+      }
+      return option;
+    });
+
+    setFormData({ ...formData, options: newOptions });
+  };
+
+  // Update your option rendering to include correct answer selection
+  const renderOptions = () => {
+    if (formData.questionType === 'TRUE_FALSE') {
+      return (
+        <div className="true-false-options">
+          {formData.options.map((option, index) => (
+            <FormControlLabel
+              key={index}
+              control={
+                <Radio
+                  checked={option.isCorrect}
+                  onChange={() => handleCorrectAnswerChange(index)}
+                  sx={{
+                    '&.Mui-checked': {
+                      color: '#7556f0',
+                    },
+                  }}
+                />
+              }
+              label={option.text}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return formData.options.map((option, index) => (
+      <div key={index} className="option-row">
+        <TextField
+          value={option.text}
+          onChange={(e) => handleOptionChange(index, e.target.value)}
+          placeholder={`Option ${index + 1}`}
+          fullWidth
+        />
+        <FormControlLabel
+          control={
+            <Radio
+              checked={option.isCorrect}
+              onChange={() => handleCorrectAnswerChange(index)}
+              sx={{
+                '&.Mui-checked': {
+                  color: '#7556f0',
+                },
+              }}
+            />
+          }
+          label="Correct"
+        />
+      </div>
+    ));
   };
 
   return (
@@ -238,57 +306,7 @@ const CreateQuestion = () => {
               </InputLabel>
               
               <div className="options-container">
-                {formData.options.map((option) => (
-                  <div key={option.id} className="option-row">
-                    {formData.questionType === 'MCQ' ? (
-                      // MCQ Option
-                      <>
-                        <TextField
-                          value={option.text}
-                          onChange={(e) => handleOptionChange(option.id, e.target.value)}
-                          placeholder={`Option ${option.id}`}
-                          className="custom-input"
-                          fullWidth
-                        />
-                        <div className="correct-switch">
-                          <Switch
-                            checked={option.isCorrect}
-                            onChange={() => handleCorrectToggle(option.id)}
-                            color="primary"
-                          />
-                          <span className="switch-label">Correct</span>
-                        </div>
-                        {formData.options.length > 2 && (
-                          <IconButton 
-                            onClick={() => removeOption(option.id)}
-                            size="small"
-                            className="remove-option-btn"
-                          >
-                            <MinusIcon />
-                          </IconButton>
-                        )}
-                      </>
-                    ) : (
-                      // True/False Option
-                      <div className="true-false-option">
-                        <TextField
-                          value={option.text}
-                          disabled
-                          className="custom-input"
-                          fullWidth
-                        />
-                        <div className="correct-switch">
-                          <Switch
-                            checked={option.isCorrect}
-                            onChange={() => handleCorrectToggle(option.id)}
-                            color="primary"
-                          />
-                          <span className="switch-label">Correct</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                {renderOptions()}
 
                 {/* Add Option Button (only for MCQ) */}
                 {formData.questionType === 'MCQ' && (
@@ -302,6 +320,22 @@ const CreateQuestion = () => {
                   </Button>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Correct Answer Input for Fill in the Blanks and Short Answer */}
+          {(formData.questionType === 'FILL_IN_THE_BLANKS' || formData.questionType === 'SHORT_ANSWER') && (
+            <div className="form-field">
+              <InputLabel className="field-label">
+                Correct Answer
+              </InputLabel>
+              <TextField
+                value={formData.correctAns}
+                onChange={(e) => setFormData({ ...formData, correctAns: e.target.value })}
+                placeholder="Enter the correct answer"
+                className="custom-input"
+                fullWidth
+              />
             </div>
           )}
 

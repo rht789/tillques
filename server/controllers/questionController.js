@@ -1,62 +1,97 @@
 // controllers/questionController.js
 
-const { Question, Quiz, Subtopic, Option, sequelize } = require('../models');
+const { Question, Quiz, Subtopic, Option, sequelize, Quiz_Question } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const questionService = require('../services/questionService');
 
 // Create a new question under a specific quiz
 exports.createQuestion = async (req, res) => {
-  const { quizID } = req.params;
   const transaction = await sequelize.transaction();
-
+  
   try {
-    const {
-      questionText,
-      questionType,
-      difficulty,
-      timeLimit,
-      source,
-      options
-    } = req.body;
+    const { quizId } = req.params;
+    const { questionType, options, questionText, difficulty, timeLimit, correctAns } = req.body;
 
-    // Create question
+    // Validate MCQ has at least one correct answer
+    if (questionType === 'MCQ' && !options.some(opt => opt.isCorrect)) {
+      return res.status(400).json({
+        success: false,
+        message: 'MCQ questions must have at least one correct answer'
+      });
+    }
+
+    // Determine correct answer based on question type
+    let finalCorrectAns = '';
+    switch (questionType) {
+      case 'MCQ':
+        finalCorrectAns = options
+          .filter(opt => opt.isCorrect)
+          .map(opt => opt.text)
+          .join(',');
+        break;
+      case 'TRUE_FALSE':
+        finalCorrectAns = options.find(opt => opt.isCorrect)?.text || 'True';
+        break;
+      case 'FILL_IN_THE_BLANKS':
+      case 'SHORT_ANSWER':
+        finalCorrectAns = correctAns || ''; // Use the directly provided correct answer
+        break;
+      default:
+        finalCorrectAns = '';
+    }
+
+    // Create the question
     const question = await Question.create({
       questionID: uuidv4(),
       questionText,
       questionType,
-      source,
+      correctAns: finalCorrectAns,
+      source: 'manual',
       difficulty,
       timeLimit
     }, { transaction });
 
-    // If MCQ, create options
-    if (questionType === 'MCQ' && Array.isArray(options)) {
-      await Promise.all(options.map(option =>
-        Option.create({
-          optionID: uuidv4(),
-          questionID: question.questionID,
-          optionText: option.optionText,
-          isCorrect: option.isCorrect
-        }, { transaction })
-      ));
+    // Create options only for MCQ and TRUE_FALSE
+    if (['MCQ', 'TRUE_FALSE'].includes(questionType) && options?.length > 0) {
+      const optionsData = options.map(opt => ({
+        optionID: uuidv4(),
+        questionID: question.questionID,
+        optionText: opt.text,
+        isCorrect: opt.isCorrect
+      }));
+
+      await Option.bulkCreate(optionsData, { transaction });
     }
 
-    // Associate question with quiz
-    await question.addQuiz(quizID, { transaction });
+    // Create Quiz_Question association
+    await Quiz_Question.create({
+      quizID: quizId,
+      questionID: question.questionID
+    }, { transaction });
 
     await transaction.commit();
+
+    // Fetch the created question with its options
+    const createdQuestion = await Question.findByPk(question.questionID, {
+      include: [{
+        model: Option,
+        as: 'options'
+      }]
+    });
 
     res.status(201).json({
       success: true,
       message: 'Question created successfully',
-      data: question
+      data: createdQuestion
     });
+
   } catch (error) {
     await transaction.rollback();
     console.error('Error creating question:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creating question'
+      message: 'Error creating question',
+      error: error.message
     });
   }
 };
@@ -231,40 +266,37 @@ exports.deleteQuestion = async (req, res) => {
 
 // Add this new method
 exports.getQuizQuestions = async (req, res) => {
-  const { quizID } = req.params;
-
   try {
-    const quiz = await Quiz.findOne({
-      where: { 
-        quizID,
-        createdBy: req.user.id 
-      },
-      include: [{
-        model: Question,
-        as: 'questions',
-        include: [{
+    const { quizId } = req.params;
+
+    const questions = await Question.findAll({
+      include: [
+        {
           model: Option,
           as: 'options'
-        }]
-      }]
+        },
+        {
+          model: Quiz,
+          through: {
+            model: Quiz_Question,
+            attributes: []  // Exclude junction table attributes
+          },
+          where: { quizID: quizId },
+          attributes: []  // Exclude Quiz attributes from result
+        }
+      ]
     });
 
-    if (!quiz) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quiz not found'
-      });
-    }
-
-    res.status(200).json({
+    res.json({
       success: true,
-      data: quiz.questions
+      data: questions
     });
   } catch (error) {
-    console.error('Error fetching quiz questions:', error);
+    console.error('Error fetching questions:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching quiz questions'
+      message: 'Error fetching quiz questions',
+      error: error.message
     });
   }
 };

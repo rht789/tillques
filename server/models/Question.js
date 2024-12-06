@@ -6,44 +6,50 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
+      allowNull: false
     },
     questionText: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: false
     },
     questionType: {
       type: DataTypes.ENUM('MCQ', 'TRUE_FALSE', 'SHORT_ANSWER', 'FILL_IN_THE_BLANKS'),
-      allowNull: false,
+      allowNull: false
     },
     correctAns: {
-      type: DataTypes.STRING,
-      allowNull: true, // Allow null for MCQ questions
+      type: DataTypes.TEXT,
+      allowNull: false
     },
     source: {
-      type: DataTypes.ENUM('AI', 'manual'),
-      allowNull: false,
+      type: DataTypes.STRING,
+      allowNull: false
     },
     difficulty: {
       type: DataTypes.ENUM('easy', 'medium', 'hard'),
-      allowNull: false,
+      allowNull: false
     },
     timeLimit: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      allowNull: false
+    },
+    subtopicID: {
+      type: DataTypes.UUID,
+      allowNull: true
     }
   }, {
     tableName: 'Questions',
+    timestamps: true
   });
 
-  Question.associate = function(models) {
-    Question.hasMany(models.Option, { 
-      as: 'options', 
-      foreignKey: 'questionID' 
-    });
+  Question.associate = (models) => {
     Question.belongsToMany(models.Quiz, {
-      through: 'Quiz_Questions',
+      through: 'Quiz_Question',
       foreignKey: 'questionID',
-      as: 'quizzes'
+      otherKey: 'quizID'
+    });
+    Question.hasMany(models.Option, {
+      foreignKey: 'questionID',
+      as: 'options'
     });
   };
 

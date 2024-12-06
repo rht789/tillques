@@ -11,10 +11,10 @@ const api = axios.create({
   }
 });
 
-// Request interceptor
+// Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,15 +28,7 @@ api.interceptors.request.use(
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    // Log successful responses for debugging
-    console.log('API Response:', {
-      endpoint: response.config.url,
-      status: response.status,
-      data: response.data
-    });
-    return response;
-  },
+  (response) => response,
   (error) => {
     console.error('API Error:', {
       endpoint: error.config?.url,
@@ -44,8 +36,9 @@ api.interceptors.response.use(
       message: error.response?.data?.message || error.message
     });
 
-    // Handle different error scenarios
-    if (error.response?.status === 401) {
+    if (error.response?.status === 404 && error.config?.url.includes('/questions')) {
+      toast.error('Questions not found for this quiz');
+    } else if (error.response?.status === 401) {
       toast.error('Session expired. Please login again.');
       localStorage.removeItem('token');
       window.location.href = '/login';

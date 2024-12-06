@@ -23,6 +23,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { QuizProvider } from './contexts/QuizContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import QuestionDisplay from './pages/Questions/QuestionDisplay';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -46,9 +47,10 @@ function App() {
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/quizzes" element={<ProtectedRoute><ErrorBoundary><QuizList /></ErrorBoundary></ProtectedRoute>} />
               <Route path="/create-quiz" element={<ProtectedRoute><CreateQuiz /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizID/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizID/create-question" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
-              {/* ... other routes ... */}
+              <Route path="/quizzes/:quizId/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
+              <Route path="/quizzes/:quizId/create-question" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
+              <Route path="/quizzes/:quizId/questions" element={<ProtectedRoute><QuestionDisplay /></ProtectedRoute>} />
+              <Route path="/quizzes/:quizId/questions/:questionId/edit" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
             </Routes>
           </main>
           <Footer />

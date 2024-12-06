@@ -23,24 +23,22 @@ const deleteQuiz = async (quizId) => {
   return response.data;
 };
 
-export const updateQuizMode = async (quizID, mode) => {
+export const updateQuizMode = async (quizId, mode) => {
   try {
-    const response = await api.put(`/quizzes/${quizID}/mode`, { mode });
-    console.log('Update quiz mode response:', response.data);
+    const response = await api.put(`/quizzes/${quizId}/mode`, { mode });
     return response.data;
   } catch (error) {
-    console.error('Error updating quiz mode:', error.response?.data || error.message);
+    console.error('Error updating quiz mode:', error);
     throw error;
   }
 };
 
-export const validateQuizStep = async (quizID, step) => {
+export const validateQuizStep = async (quizId, step) => {
   try {
-    const response = await api.put(`/quizzes/${quizID}/step`, { step });
-    console.log('Validate quiz step response:', response.data);
+    const response = await api.put(`/quizzes/${quizId}/step`, { step });
     return response.data;
   } catch (error) {
-    console.error('Error validating quiz step:', error.response?.data || error.message);
+    console.error('Error validating quiz step:', error);
     throw error;
   }
 };
@@ -55,6 +53,10 @@ export const createQuestion = async (quizID, questionData) => {
   }
 };
 
+const navigateToQuestions = (navigate, quizId) => {
+  navigate(`/quizzes/${quizId}/questions`);
+};
+
 const quizService = {
   getAllQuizzes,
   createQuiz,
@@ -62,6 +64,7 @@ const quizService = {
   updateQuizMode,
   validateQuizStep,
   createQuestion,
+  navigateToQuestions,
   // ... other methods
 };
 

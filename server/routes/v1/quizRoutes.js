@@ -3,7 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const quizController = require('../../controllers/quizController');
+const questionController = require('../../controllers/questionController');
 const { authenticateToken } = require('../../middlewares/authMiddleware');
+const validateQuestion = require('../../middlewares/validateQuestion');
 
 // Protect all quiz routes
 router.use(authenticateToken);
@@ -16,12 +18,19 @@ router.put('/:id', quizController.updateQuiz);
 router.delete('/:id', quizController.deleteQuiz);
 
 // Update quiz mode route
-router.put('/:id/mode', authenticateToken, quizController.updateQuizMode);
+router.put('/:id/mode', quizController.updateQuizMode);
 
 // Update quiz step route
-router.put('/:id/step', authenticateToken, quizController.updateQuizStep);
+router.put('/:id/step', quizController.updateQuizStep);
 
-// Create question route
-router.post('/:id/questions', authenticateToken, quizController.createQuestion);
+// Question routes (nested under quizzes)
+router.get('/:quizId/questions', questionController.getQuizQuestions);
+router.post('/:quizId/questions', 
+  authenticateToken,
+  validateQuestion,
+  questionController.createQuestion
+);
+router.put('/:quizId/questions/:questionId', questionController.updateQuestion);
+router.delete('/:quizId/questions/:questionId', questionController.deleteQuestion);
 
 module.exports = router;

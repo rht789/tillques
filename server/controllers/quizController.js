@@ -1,8 +1,9 @@
 // server/controllers/quizController.js
 
-const { Quiz, Topic } = require('../models');
+const { Quiz, Topic, Question, Option, sequelize } = require('../models');
 const { v4: uuidv4 } = require('uuid');
 const quizService = require('../services/quizService');
+const Quiz_Question = require('../models/Quiz_Question');
 
 // Get all quizzes
 exports.getQuizzes = async (req, res) => {
@@ -366,29 +367,15 @@ exports.updateQuizStep = async (req, res) => {
 
 exports.createQuestion = async (req, res) => {
   try {
-    const { id: quizID } = req.params;
-    const questionData = req.body;
-
-    // First, verify the quiz exists and belongs to the user
-    const quiz = await Quiz.findOne({
-      where: { 
-        quizID,
-        createdBy: req.user.id 
-      }
-    });
-
-    if (!quiz) {
-      return res.status(404).json({
-        success: false,
-        message: 'Quiz not found'
-      });
-    }
-
-    // Create the question
-    const question = await Question.create({
-      ...questionData,
+    const { quizID, questionText, questionType, difficulty, timeLimit, options } = req.body;
+    
+    const question = await Quiz_Question.create({
       quizID,
-      createdBy: req.user.id
+      questionText,
+      questionType,
+      difficulty,
+      timeLimit,
+      options
     });
 
     res.status(201).json({
@@ -399,8 +386,7 @@ exports.createQuestion = async (req, res) => {
     console.error('Error creating question:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creating question',
-      error: error.message
+      message: 'Error creating question'
     });
   }
 };

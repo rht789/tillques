@@ -6,45 +6,35 @@ import quizService from '../../services/quizService';
 
 const ModeSelection = () => {
   const navigate = useNavigate();
-  const { quizID } = useParams();
+  const { quizId } = useParams();
 
   const handleModeSelect = async (mode) => {
     try {
-      console.log('Selected mode:', mode);
-      
-      try {
-        await quizService.updateQuizMode(quizID, mode);
-        await quizService.validateQuizStep(quizID, 'mode_selected');
-        toast.success('Mode selected successfully!', {
-          position: "top-right",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-        });
-      } catch (apiError) {
-        console.warn('API endpoints not ready:', apiError);
-        toast.warning('Proceeding without backend confirmation', {
-          position: "top-right",
-          autoClose: 3000,
-        });
+      if (!quizId) {
+        toast.error('Quiz ID is missing');
+        return;
       }
+
+      console.log('Updating quiz mode for quiz:', quizId, 'with mode:', mode);
       
-      // Navigate based on mode selection
+      const modeResponse = await quizService.updateQuizMode(quizId, mode);
+      if (!modeResponse.success) {
+        throw new Error(modeResponse.message || 'Failed to update quiz mode');
+      }
+
+      const stepResponse = await quizService.validateQuizStep(quizId, 'mode_selected');
+      if (!stepResponse.success) {
+        throw new Error(stepResponse.message || 'Failed to update quiz step');
+      }
+
       if (mode === 'manual') {
-        navigate(`/quizzes/${quizID}/create-question`);
+        navigate(`/quizzes/${quizId}/create-question`);
       } else if (mode === 'ai') {
-        navigate(`/quizzes/${quizID}/ai-generation`);
+        navigate(`/quizzes/${quizId}/ai-generation`);
       }
     } catch (error) {
       console.error('Error in handleModeSelect:', error);
-      // Navigate anyway for now, until backend is ready
-      if (mode === 'manual') {
-        navigate(`/quizzes/${quizID}/create-question`);
-      } else if (mode === 'ai') {
-        navigate(`/quizzes/${quizID}/ai-generation`);
-      }
+      toast.error(error.message || 'Failed to set quiz mode');
     }
   };
 
@@ -59,7 +49,7 @@ const ModeSelection = () => {
           variant="contained"
           size="large"
           onClick={() => {
-            console.log('Manual button clicked');
+            console.log('Manual button clicked for quiz:', quizId);
             handleModeSelect('manual');
           }}
           sx={{ 

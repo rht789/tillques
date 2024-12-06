@@ -1,30 +1,24 @@
-// models/Quiz_Question.js
-
 module.exports = (sequelize, DataTypes) => {
   const Quiz_Question = sequelize.define('Quiz_Question', {
     quizID: {
       type: DataTypes.UUID,
-      primaryKey: true,
+      allowNull: false,
       references: {
         model: 'Quizzes',
-        key: 'quizID',
-      },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
+        key: 'quizID'
+      }
     },
     questionID: {
       type: DataTypes.UUID,
-      primaryKey: true,
+      allowNull: false,
       references: {
         model: 'Questions',
-        key: 'questionID',
-      },
-      onDelete: 'CASCADE',
-      onUpdate: 'CASCADE',
-    },
+        key: 'questionID'
+      }
+    }
   }, {
-    timestamps: false,
     tableName: 'Quiz_Questions',
+    timestamps: false
   });
 
   return Quiz_Question;

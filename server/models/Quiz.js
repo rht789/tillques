@@ -65,6 +65,11 @@ module.exports = (sequelize, DataTypes) => {
 
   Quiz.associate = (models) => {
     Quiz.belongsTo(models.Topic, { as: 'topic', foreignKey: 'topicID' });
+    Quiz.belongsToMany(models.Question, {
+      through: 'Quiz_Question',
+      foreignKey: 'quizID',
+      otherKey: 'questionID'
+    });
   };
 
   return Quiz;
