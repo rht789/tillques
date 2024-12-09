@@ -178,3 +178,35 @@
   border-radius: 9999px;
   font-size: 0.875rem;
 }
+
+.quiz-finalized-message {
+  margin-bottom: 20px;
+  padding: 12px;
+  background-color: #e8f4fd;
+  border: 1px solid #b3e0ff;
+  border-radius: 4px;
+  color: #0066cc;
+}
+
+.add-question-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #412191;
+  font-size: 1.1rem;
+}
+
+.error-message {
+  text-align: center;
+  color: #dc2626;
+  padding: 20px;
+  background-color: #fee2e2;
+  border-radius: 4px;
+  margin: 20px 0;
+}

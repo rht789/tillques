@@ -24,40 +24,48 @@ import 'react-toastify/dist/ReactToastify.css';
 import { QuizProvider } from './contexts/QuizContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import QuestionDisplay from './pages/Questions/QuestionDisplay';
+import HostControl from './pages/Host/HostControl';
+import JoinQuiz from './pages/Participant/JoinQuiz';
+import WaitingRoom from './pages/Participant/WaitingRoom';
 
 function App() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <AuthProvider>
-      <QuizProvider>
-        <div className="app-container">
-          <Navbar />
-          <main className="main-content">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={isAuthenticated ? <Navigate to="/home" /> : <LandingPage />} />
-              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-              <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-              <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-              
-              {/* Protected Routes */}
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/quizzes" element={<ProtectedRoute><ErrorBoundary><QuizList /></ErrorBoundary></ProtectedRoute>} />
-              <Route path="/create-quiz" element={<ProtectedRoute><CreateQuiz /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizId/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizId/create-question" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizId/questions" element={<ProtectedRoute><QuestionDisplay /></ProtectedRoute>} />
-              <Route path="/quizzes/:quizId/questions/:questionId/edit" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
-            </Routes>
-          </main>
-          <Footer />
-          <ToastContainer />
-        </div>
-      </QuizProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <QuizProvider>
+          <div className="app-container">
+            <Navbar />
+            <main className="main-content">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={isAuthenticated ? <Navigate to="/home" /> : <LandingPage />} />
+                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+                
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/quizzes" element={<ProtectedRoute><ErrorBoundary><QuizList /></ErrorBoundary></ProtectedRoute>} />
+                <Route path="/create-quiz" element={<ProtectedRoute><CreateQuiz /></ProtectedRoute>} />
+                <Route path="/quizzes/:quizId/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
+                <Route path="/quizzes/:quizId/create-question" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
+                <Route path="/quizzes/:quizId/questions" element={<ProtectedRoute><QuestionDisplay /></ProtectedRoute>} />
+                <Route path="/quizzes/:quizId/questions/:questionId/edit" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
+                <Route path="/host-control/:sessionId" element={<ProtectedRoute><HostControl /></ProtectedRoute>} />
+                <Route path="/join-quiz" element={<ProtectedRoute><JoinQuiz /></ProtectedRoute>} />
+                <Route path="/waiting-room/:sessionId" element={<ProtectedRoute><WaitingRoom /></ProtectedRoute>} />
+              </Routes>
+            </main>
+            <Footer />
+            <ToastContainer />
+          </div>
+        </QuizProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

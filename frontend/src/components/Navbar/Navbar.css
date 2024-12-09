@@ -174,4 +174,20 @@
   transform: translateY(-50%);
   color: #e0e0e0;
 }
+
+.join-quiz-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.join-quiz-btn:hover {
+  background-color: #218838;
+}
   

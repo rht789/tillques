@@ -55,6 +55,35 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+// Add these associations to your existing associations
+
+// Session Associations
+db.Session.belongsTo(db.User, {
+  foreignKey: 'hostID',
+  as: 'host'
+});
+
+db.Session.belongsTo(db.Quiz, {
+  foreignKey: 'quizID',
+ as: 'quiz'
+});
+
+db.Session.hasMany(db.Participant, {
+  foreignKey: 'sessionID',
+ as: 'participants'
+});
+
+// Participant Associations
+db.Participant.belongsTo(db.Session, {
+  foreignKey: 'sessionID',
+  as: 'session'
+});
+
+db.Participant.belongsTo(db.User, {
+  foreignKey: 'userID',
+  as: 'user'
+});
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 

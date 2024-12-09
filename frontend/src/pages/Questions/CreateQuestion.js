@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import questionService from '../../services/questionService';
+import quizService from '../../services/quizService';
 import { toast } from 'react-toastify';
 import {
   Container,
@@ -23,6 +24,7 @@ import {
   Card,
   CardContent,
   Chip,
+  Alert,
 } from '@mui/material';
 import {
   AccessTime as ClockIcon,
@@ -47,6 +49,8 @@ const CreateQuestion = () => {
   });
   const [savedQuestions, setSavedQuestions] = useState([]);
   const [errors, setErrors] = useState({});
+  const [quiz, setQuiz] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // Add validation for quizId
   useEffect(() => {
@@ -55,6 +59,30 @@ const CreateQuestion = () => {
       navigate('/quizzes');
     }
   }, [quizId, navigate]);
+
+  // Add this at the beginning of your component
+  useEffect(() => {
+    const fetchQuizDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await quizService.getQuiz(quizId);
+        if (response.success) {
+          setQuiz(response.data);
+        } else {
+          toast.error('Failed to fetch quiz details');
+        }
+      } catch (error) {
+        console.error('Error fetching quiz:', error);
+        toast.error('Error loading quiz details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (quizId) {
+      fetchQuizDetails();
+    }
+  }, [quizId]);
 
   // Handle question type change
   const handleTypeChange = (event) => {
@@ -165,6 +193,11 @@ const CreateQuestion = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     
+    if (quiz?.status === 'ready') {
+      toast.error('Cannot add questions to a finalized quiz');
+      return;
+    }
+
     // Validation checks
     if (formData.questionType === 'MCQ' || formData.questionType === 'TRUE_FALSE') {
       const correctCount = formData.options.filter(opt => opt.isCorrect).length;
@@ -257,6 +290,34 @@ const CreateQuestion = () => {
   const handleShowQuestions = () => {
     navigate(`/quizzes/${quizId}/questions`);
   };
+
+  if (loading) {
+    return <div className="loading">Loading quiz details...</div>;
+  }
+
+  if (quiz?.status === 'ready') {
+    return (
+      <div className="create-question-container">
+        <div className="question-card">
+          <Alert severity="info" sx={{ mb: 2 }}>
+            This quiz has been finalized. Questions cannot be added or modified.
+          </Alert>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/quizzes')}
+            sx={{
+              backgroundColor: '#7556f0',
+              '&:hover': {
+                backgroundColor: '#6d40e7',
+              },
+            }}
+          >
+            Back to Quizzes
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="create-question-container">
@@ -445,6 +506,7 @@ const CreateQuestion = () => {
                   backgroundColor: '#6d40e7',
                 },
               }}
+              disabled={quiz?.status === 'ready'}
             >
               Save Question
             </Button>
@@ -461,6 +523,7 @@ const CreateQuestion = () => {
                   backgroundColor: 'rgba(117, 86, 240, 0.04)',
                 },
               }}
+              disabled={quiz?.status === 'ready'}
             >
               Show Questions
             </Button>

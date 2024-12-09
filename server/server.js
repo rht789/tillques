@@ -2,13 +2,30 @@
 
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 const userRoutes = require('./routes/v1/userRoutes');
 const quizRoutes = require('./routes/v1/quizRoutes');
 const questionRoutes = require('./routes/v1/questionRoutes');
+const sessionRoutes = require('./routes/v1/sessionRoutes');
 require('dotenv').config();
 const requestLogger = require('./middlewares/requestLogger');
+const waitingRoomHandler = require('./socket/waitingRoomHandler');
+const socketAuthMiddleware = require('./middlewares/socketAuthMiddleware');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
+});
+
+// Apply socket authentication middleware
+io.use(socketAuthMiddleware);
+
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
@@ -30,6 +47,7 @@ app.use(requestLogger);
 // API routes
 app.use('/api/v1/quizzes', quizRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/sessions', sessionRoutes);
 // app.use('/api/v1', questionRoutes);
 
 // Error handling middleware
@@ -42,8 +60,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
+// Initialize socket handlers
+waitingRoomHandler(io);
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = app;
+module.exports = { app, server, io };

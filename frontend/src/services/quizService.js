@@ -57,6 +57,38 @@ const navigateToQuestions = (navigate, quizId) => {
   navigate(`/quizzes/${quizId}/questions`);
 };
 
+const finalizeQuiz = async (quizId) => {
+  try {
+    const response = await api.put(`/quizzes/${quizId}/finalize`);
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to finalize quiz');
+    }
+    return response.data;
+  } catch (error) {
+    console.error('Error in finalizeQuiz:', error);
+    throw error;
+  }
+};
+
+const getQuiz = async (quizId) => {
+  try {
+    const response = await api.get(`/quizzes/${quizId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching quiz:', error);
+    throw error;
+  }
+};
+
+const startQuizSession = async (quizId) => {
+  try {
+    const response = await api.post(`/quizzes/${quizId}/start-session`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const quizService = {
   getAllQuizzes,
   createQuiz,
@@ -65,6 +97,9 @@ const quizService = {
   validateQuizStep,
   createQuestion,
   navigateToQuestions,
+  finalizeQuiz,
+  getQuiz,
+  startQuizSession,
   // ... other methods
 };
 

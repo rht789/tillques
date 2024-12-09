@@ -14,7 +14,9 @@ import {
   Cpu,
   Edit3,
   List,
-  PlusCircle
+  PlusCircle,
+  Check,
+  Play
 } from 'react-feather';
 import './QuizList.css';
 import DeleteQuizModal from './DeleteQuiz';
@@ -135,6 +137,40 @@ const QuizList = () => {
     }
   };
 
+  const handleFinalizeQuiz = async (quizId) => {
+    try {
+      const response = await quizService.finalizeQuiz(quizId);
+      if (response.success) {
+        toast.success(response.message || 'Quiz finalized successfully');
+        await fetchQuizzes(); // Refresh the quiz list
+      } else {
+        toast.error(response.message || 'Failed to finalize quiz');
+      }
+    } catch (error) {
+      console.error('Error finalizing quiz:', error);
+      toast.error(error.response?.data?.message || 'Error finalizing quiz');
+    }
+  };
+
+  const handleStartQuiz = async (quiz) => {
+    try {
+      const response = await quizService.startQuizSession(quiz.quizID);
+      
+      if (response.success) {
+        navigate(`/host-control/${response.data.sessionId}`, {
+          state: {
+            sessionCode: response.data.sessionCode,
+            quizName: quiz.quizName
+          }
+        });
+        toast.success('Quiz session created successfully');
+      }
+    } catch (error) {
+      console.error('Error starting quiz session:', error);
+      toast.error(error.response?.data?.message || 'Failed to start quiz session');
+    }
+  };
+
   if (loading) return <div className="loading-spinner">Loading...</div>;
   if (error) return <div className="error-message">{error}</div>;
 
@@ -201,28 +237,51 @@ const QuizList = () => {
               </div>
               <div className="quiz-card-footer">
                 <div className="action-buttons">
-                  <button 
-                    className="edit-btn"
-                    onClick={() => handleEdit(quiz.quizID)}
-                  >
-                    <Edit3 size={16} />
-                    Edit
-                  </button>
-                  <button 
-                    className="delete-btn"
-                    onClick={() => openDeleteModal(quiz)}
-                  >
-                    <Trash2 size={16} />
-                    Delete
-                  </button>
+                  {quiz.status === 'ready' ? (
+                    <button 
+                      className="start-btn"
+                      onClick={() => handleStartQuiz(quiz)}
+                    >
+                      <Play size={16} />
+                      Start Session
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        className="edit-btn"
+                        onClick={() => handleEdit(quiz.quizID)}
+                      >
+                        <Edit3 size={16} />
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => openDeleteModal(quiz)}
+                      >
+                        <Trash2 size={16} />
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
-                <button 
-                  className="questions-btn"
-                  onClick={() => handleQuestionsClick(quiz.quizID)}
-                >
-                  <List size={16} />
-                  Questions
-                </button>
+                <div className="action-buttons">
+                  <button 
+                    className="questions-btn"
+                    onClick={() => handleQuestionsClick(quiz.quizID)}
+                  >
+                    <List size={16} />
+                    Questions
+                  </button>
+                  {quiz.status === 'draft' && (
+                    <button 
+                      className="finalize-btn"
+                      onClick={() => handleFinalizeQuiz(quiz.quizID)}
+                    >
+                      <Check size={16} />
+                      Finalize
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))

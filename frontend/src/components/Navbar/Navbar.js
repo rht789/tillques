@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Search, PersonOutline } from '@mui/icons-material';
+import { Play } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
 import './Navbar.css';
 
@@ -51,6 +52,16 @@ const Navbar = () => {
                 className="search-input"
               />
             </div>
+          )}
+
+          {isAuthenticated && (
+            <Link 
+              to="/join-quiz"
+              className="join-quiz-btn"
+            >
+              <Play size={16} />
+              Join Quiz
+            </Link>
           )}
 
           {isAuthenticated ? (

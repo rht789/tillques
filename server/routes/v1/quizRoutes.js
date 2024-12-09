@@ -33,4 +33,10 @@ router.post('/:quizId/questions',
 router.put('/:quizId/questions/:questionId', questionController.updateQuestion);
 router.delete('/:quizId/questions/:questionId', questionController.deleteQuestion);
 
+// Finalize quiz route
+router.put('/:id/finalize', authenticateToken, quizController.finalizeQuiz);
+
+// Start session route
+router.post('/:id/start-session', authenticateToken, quizController.startSession);
+
 module.exports = router;

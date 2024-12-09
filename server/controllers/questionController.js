@@ -6,92 +6,120 @@ const questionService = require('../services/questionService');
 
 // Create a new question under a specific quiz
 exports.createQuestion = async (req, res) => {
-  const transaction = await sequelize.transaction();
-  
   try {
     const { quizId } = req.params;
-    const { questionType, options, questionText, difficulty, timeLimit, correctAns } = req.body;
+    
+    // Check if quiz is finalized
+    const quiz = await Quiz.findOne({
+      where: { quizID: quizId }
+    });
 
-    // Validate MCQ has at least one correct answer
-    if (questionType === 'MCQ' && !options.some(opt => opt.isCorrect)) {
-      return res.status(400).json({
+    if (!quiz) {
+      return res.status(404).json({
         success: false,
-        message: 'MCQ questions must have at least one correct answer'
+        message: 'Quiz not found'
       });
     }
 
-    // Determine correct answer based on question type
-    let finalCorrectAns = '';
-    switch (questionType) {
-      case 'MCQ':
-        finalCorrectAns = options
-          .filter(opt => opt.isCorrect)
-          .map(opt => opt.text)
-          .join(',');
-        break;
-      case 'TRUE_FALSE':
-        finalCorrectAns = options.find(opt => opt.isCorrect)?.text || 'True';
-        break;
-      case 'FILL_IN_THE_BLANKS':
-      case 'SHORT_ANSWER':
-        finalCorrectAns = correctAns || ''; // Use the directly provided correct answer
-        break;
-      default:
-        finalCorrectAns = '';
+    if (quiz.status === 'ready') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot add questions to a finalized quiz'
+      });
     }
 
-    // Create the question
-    const question = await Question.create({
-      questionID: uuidv4(),
-      questionText,
-      questionType,
-      correctAns: finalCorrectAns,
-      source: 'manual',
-      difficulty,
-      timeLimit
-    }, { transaction });
+    const transaction = await sequelize.transaction();
+    
+    try {
+      const { questionType, options, questionText, difficulty, timeLimit, correctAns } = req.body;
 
-    // Create options only for MCQ and TRUE_FALSE
-    if (['MCQ', 'TRUE_FALSE'].includes(questionType) && options?.length > 0) {
-      const optionsData = options.map(opt => ({
-        optionID: uuidv4(),
-        questionID: question.questionID,
-        optionText: opt.text,
-        isCorrect: opt.isCorrect
-      }));
+      // Validate MCQ has at least one correct answer
+      if (questionType === 'MCQ' && !options.some(opt => opt.isCorrect)) {
+        return res.status(400).json({
+          success: false,
+          message: 'MCQ questions must have at least one correct answer'
+        });
+      }
 
-      await Option.bulkCreate(optionsData, { transaction });
+      // Determine correct answer based on question type
+      let finalCorrectAns = '';
+      switch (questionType) {
+        case 'MCQ':
+          finalCorrectAns = options
+            .filter(opt => opt.isCorrect)
+            .map(opt => opt.text)
+            .join(',');
+          break;
+        case 'TRUE_FALSE':
+          finalCorrectAns = options.find(opt => opt.isCorrect)?.text || 'True';
+          break;
+        case 'FILL_IN_THE_BLANKS':
+        case 'SHORT_ANSWER':
+          finalCorrectAns = correctAns || ''; // Use the directly provided correct answer
+          break;
+        default:
+          finalCorrectAns = '';
+      }
+
+      // Create the question
+      const question = await Question.create({
+        questionID: uuidv4(),
+        questionText,
+        questionType,
+        correctAns: finalCorrectAns,
+        source: 'manual',
+        difficulty,
+        timeLimit
+      }, { transaction });
+
+      // Create options only for MCQ and TRUE_FALSE
+      if (['MCQ', 'TRUE_FALSE'].includes(questionType) && options?.length > 0) {
+        const optionsData = options.map(opt => ({
+          optionID: uuidv4(),
+          questionID: question.questionID,
+          optionText: opt.text,
+          isCorrect: opt.isCorrect
+        }));
+
+        await Option.bulkCreate(optionsData, { transaction });
+      }
+
+      // Create Quiz_Question association
+      await Quiz_Question.create({
+        quizID: quizId,
+        questionID: question.questionID
+      }, { transaction });
+
+      await transaction.commit();
+
+      // Fetch the created question with its options
+      const createdQuestion = await Question.findByPk(question.questionID, {
+        include: [{
+          model: Option,
+          as: 'options'
+        }]
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Question created successfully',
+        data: createdQuestion
+      });
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error creating question:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error creating question',
+        error: error.message
+      });
     }
-
-    // Create Quiz_Question association
-    await Quiz_Question.create({
-      quizID: quizId,
-      questionID: question.questionID
-    }, { transaction });
-
-    await transaction.commit();
-
-    // Fetch the created question with its options
-    const createdQuestion = await Question.findByPk(question.questionID, {
-      include: [{
-        model: Option,
-        as: 'options'
-      }]
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'Question created successfully',
-      data: createdQuestion
-    });
-
   } catch (error) {
-    await transaction.rollback();
     console.error('Error creating question:', error);
     res.status(500).json({
       success: false,
-      message: 'Error creating question',
-      error: error.message
+      message: 'Error creating question'
     });
   }
 };

@@ -33,6 +33,7 @@
   display: flex;
   justify-content: space-between;
   align-items: start;
+  position: relative;
 }
 
 .quiz-card-header h3 {
@@ -284,5 +285,79 @@ button {
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
+}
+
+.finalize-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.finalize-btn:hover {
+  background-color: #45a049;
+}
+
+.finalize-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Update existing button styles to handle disabled state */
+.edit-btn:disabled,
+.delete-btn:disabled,
+.questions-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.start-btn {
+  background-color: #7556f0 !important;
+  color: white !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.start-btn:hover {
+  background-color: #6040e0 !important;
+}
+
+.start-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Update quiz card status styles */
+.quiz-status {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.quiz-status.ready {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.quiz-status.draft {
+  background-color: #FFA726;
+  color: white;
 }
   
