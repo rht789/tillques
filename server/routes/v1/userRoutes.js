@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../../controllers/userController');
 const Joi = require('joi');
+const { authenticateToken } = require('../../middlewares/authMiddleware');
 
 // Validation schemas
 const schemas = {
@@ -49,5 +50,6 @@ router.post('/login', validate(schemas.login), userController.login);
 router.post('/refresh-token', userController.refreshToken);
 router.post('/forget-password', validate(schemas.forgetPassword), userController.forgetPassword);
 router.post('/reset-password', validate(schemas.resetPassword), userController.resetPassword);
+router.get('/me', authenticateToken, userController.getCurrentUser);
 
 module.exports = router;

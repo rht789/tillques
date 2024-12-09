@@ -59,10 +59,11 @@ const joinSession = async (req, res) => {
     const { sessionCode } = req.body;
     const userId = req.user.id;
 
-    // Find active session
+    console.log('Attempting to join session with code:', sessionCode);
+
     const session = await Session.findOne({
       where: { 
-        sessionCode: sessionCode.trim(),
+        sessionCode: sessionCode.trim().toUpperCase(),
         isActive: true
       },
       include: [{
@@ -75,38 +76,53 @@ const joinSession = async (req, res) => {
     if (!session) {
       return res.status(404).json({
         success: false,
-        message: 'Invalid or inactive session code'
+        message: 'Invalid session code or session has expired'
       });
     }
 
     // Check if user is already a participant
-    const existingParticipant = await Participant.findOne({
+    let participant = await Participant.findOne({
       where: {
         sessionID: session.sessionID,
         userID: userId
       }
     });
 
-    if (existingParticipant) {
-      return res.status(400).json({
+    // Get user details
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: 'You have already joined this session'
+        message: 'User not found'
       });
     }
 
-    // Create new participant
-    const participant = await Participant.create({
-      sessionID: session.sessionID,
-      userID: userId,
-      status: 'waiting'
-    });
+    if (!participant) {
+      // Create new participant if not exists
+      participant = await Participant.create({
+        sessionID: session.sessionID,
+        userID: userId,
+        status: 'waiting'
+      });
+    }
+
+    // Get the io instance and emit participant joined event
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`session:${session.sessionID}`).emit('participant-joined', {
+        id: participant.participantID,
+        username: user.username,
+        status: participant.status
+      });
+    }
 
     res.status(200).json({
       success: true,
       data: {
         sessionId: session.sessionID,
         quizName: session.sessionQuiz.quizName,
-        participantId: participant.participantID
+        participantId: participant.participantID,
+        sessionCode: session.sessionCode
       }
     });
 
@@ -114,7 +130,8 @@ const joinSession = async (req, res) => {
     console.error('Join session error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error joining session'
+      message: 'Error joining session',
+      error: error.message
     });
   }
 };
@@ -156,8 +173,14 @@ const getSessionDetails = async (req, res) => {
       });
     }
 
-    // Check if user is host
     const isHost = session.hostID === userId;
+
+    // Format participants data
+    const participants = session.sessionParticipants.map(p => ({
+      id: p.participantID,
+      username: p.participantUser.username,
+      status: p.status
+    }));
 
     res.status(200).json({
       success: true,
@@ -165,12 +188,8 @@ const getSessionDetails = async (req, res) => {
         sessionCode: session.sessionCode,
         quizName: session.sessionQuiz.quizName,
         isHost,
-        participants: session.sessionParticipants.map(p => ({
-          id: p.participantID,
-          userId: p.userID,
-          username: p.participantUser.username,
-          status: p.status
-        }))
+        startTime: session.startTime,
+        participants
       }
     });
 
@@ -242,34 +261,31 @@ const removeParticipant = async (req, res) => {
     const { sessionId, participantId } = req.params;
     const hostId = req.user.id;
 
-    // Verify host
+    // Verify session and host
     const session = await Session.findOne({
-      where: { 
-        sessionID: sessionId,
-        hostID: hostId,
-        isActive: true
-      }
+      where: { sessionID: sessionId }
     });
 
-    if (!session) {
+    if (!session || session.hostID !== hostId) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to manage this session'
+        message: 'Unauthorized to remove participants'
       });
     }
 
     // Remove participant
-    const result = await Participant.destroy({
-      where: {
+    await Participant.destroy({
+      where: { 
         participantID: participantId,
         sessionID: sessionId
       }
     });
 
-    if (!result) {
-      return res.status(404).json({
-        success: false,
-        message: 'Participant not found'
+    // Get the io instance
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`session:${sessionId}`).emit('participant-removed', {
+        participantId
       });
     }
 
@@ -278,8 +294,8 @@ const removeParticipant = async (req, res) => {
       message: 'Participant removed successfully'
     });
 
-  } catch (err) {
-    console.error('Remove participant error:', err);
+  } catch (error) {
+    console.error('Remove participant error:', error);
     res.status(500).json({
       success: false,
       message: 'Error removing participant'

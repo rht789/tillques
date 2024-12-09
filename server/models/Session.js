@@ -38,6 +38,10 @@ module.exports = (sequelize, DataTypes) => {
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
+    },
+    startTime: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'Sessions',

@@ -1,122 +1,106 @@
 const { Session, Participant, User } = require('../models');
 
-module.exports = (io) => {
-  // Namespace for waiting room
-  const waitingRoom = io.of('/waiting-room');
+const waitingRoomHandler = (io) => {
+  io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    let currentSessionId = null;
 
-  waitingRoom.on('connection', (socket) => {
-    console.log('Client connected to waiting room:', socket.id);
-
-    // Join session room
-    socket.on('join-session', async ({ sessionId, userId }) => {
+    socket.on('join-session', async ({ sessionId }) => {
       try {
-        const participant = await Participant.findOne({
-          where: { 
-            sessionID: sessionId,
-            userID: userId
-          },
+        currentSessionId = sessionId;
+        socket.join(`session:${sessionId}`);
+        console.log(`Client ${socket.id} joined session ${sessionId}`);
+
+        // Get session details and emit to all clients in the session
+        const session = await Session.findOne({
+          where: { sessionID: sessionId },
           include: [{
-            model: User,
-            as: 'participantUser',
-            attributes: ['username']
+            model: Participant,
+            as: 'sessionParticipants',
+            include: [{
+              model: User,
+              as: 'participantUser',
+              attributes: ['username']
+            }]
           }]
         });
 
-        if (participant) {
-          socket.join(`session-${sessionId}`);
-          
-          // Notify host about new participant
-          socket.to(`session-${sessionId}`).emit('participant-joined', {
-            id: participant.participantID,
-            userId: participant.userID,
-            username: participant.participantUser.username,
-            status: participant.status
+        if (session) {
+          const participants = session.sessionParticipants.map(p => ({
+            id: p.participantID,
+            username: p.participantUser.username,
+            status: p.status
+          }));
+
+          // Emit to all clients in the session
+          io.to(`session:${sessionId}`).emit('session-update', {
+            participants
           });
         }
       } catch (error) {
-        console.error('Socket join session error:', error);
-        socket.emit('error', { message: 'Error joining session' });
+        console.error('Error in join-session:', error);
       }
     });
 
-    // Host approves participant
     socket.on('approve-participant', async ({ sessionId, participantId }) => {
       try {
-        const participant = await Participant.findOne({
-          where: { participantID: participantId, sessionID: sessionId },
-          include: [{
-            model: User,
-            as: 'participantUser',
-            attributes: ['username']
-          }]
+        await Participant.update(
+          { status: 'approved' },
+          { where: { participantID: participantId } }
+        );
+
+        io.to(`session:${sessionId}`).emit('participant-approved', {
+          participantId,
+          status: 'approved'
         });
-
-        if (participant) {
-          await participant.update({ status: 'approved' });
-
-          // Notify all clients in the session room
-          waitingRoom.to(`session-${sessionId}`).emit('participant-approved', {
-            participantId,
-            userId: participant.userID,
-            username: participant.participantUser.username
-          });
-        }
       } catch (error) {
-        console.error('Approve participant error:', error);
-        socket.emit('error', { message: 'Error approving participant' });
+        console.error('Error approving participant:', error);
       }
     });
 
-    // Host removes participant
     socket.on('remove-participant', async ({ sessionId, participantId }) => {
       try {
-        const result = await Participant.destroy({
-          where: { participantID: participantId, sessionID: sessionId }
-        });
-
-        if (result) {
-          // Notify all clients in the session room
-          waitingRoom.to(`session-${sessionId}`).emit('participant-removed', {
-            participantId
-          });
-        }
-      } catch (error) {
-        console.error('Remove participant error:', error);
-        socket.emit('error', { message: 'Error removing participant' });
-      }
-    });
-
-    // Host starts quiz
-    socket.on('start-quiz', async ({ sessionId }) => {
-      try {
+        // Get session to verify host
         const session = await Session.findOne({
           where: { sessionID: sessionId }
         });
 
-        if (session) {
-          // Notify all participants that quiz is starting
-          waitingRoom.to(`session-${sessionId}`).emit('quiz-starting', {
-            countdown: 30 // 30 seconds countdown
-          });
-
-          // After countdown, redirect to quiz
-          setTimeout(() => {
-            waitingRoom.to(`session-${sessionId}`).emit('quiz-started', {
-              quizId: session.quizID
-            });
-          }, 30000);
+        // Verify the requester is the host
+        if (session.hostID !== socket.user.id) {
+          return;
         }
+
+        // Get participant details before removal
+        const participant = await Participant.findOne({
+          where: { participantID: participantId },
+          include: [{ model: User, as: 'participantUser' }]
+        });
+
+        if (!participant) return;
+
+        // Remove the participant
+        await Participant.destroy({
+          where: { participantID: participantId }
+        });
+
+        // Emit removal event to all clients in the session
+        io.to(`session:${sessionId}`).emit('participant-removed', {
+          participantId,
+          userId: participant.userID
+        });
+
       } catch (error) {
-        console.error('Start quiz error:', error);
-        socket.emit('error', { message: 'Error starting quiz' });
+        console.error('Error removing participant:', error);
       }
     });
 
-    // Handle disconnection
     socket.on('disconnect', () => {
-      console.log('Client disconnected from waiting room:', socket.id);
+      if (currentSessionId) {
+        socket.leave(`session:${currentSessionId}`);
+      }
+      console.log('Client disconnected:', socket.id);
     });
   });
+};
 
-  return waitingRoom;
-}; 
+module.exports = waitingRoomHandler; 

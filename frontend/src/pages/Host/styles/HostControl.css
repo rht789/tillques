@@ -1,47 +1,67 @@
-.host-control {
-  max-width: 600px;
-  margin: 2rem auto;
+.host-control-container {
   padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.session-info {
+.host-control-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.panel-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.participant-count {
+  background: #7556f0;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  min-width: 2rem;
   text-align: center;
 }
 
-.countdown-banner {
-  background-color: #fff3cd;
+.auto-start-banner {
+  background: #fff3cd;
   color: #856404;
   padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
+  border-radius: 8px;
   text-align: center;
+  margin-bottom: 1.5rem;
 }
 
-.participants-list {
-  margin: 2rem 0;
-}
-
-.participant-item {
+.participant-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
+  border-radius: 8px;
   background: #f8f9fa;
-  border-radius: 4px;
   margin-bottom: 0.5rem;
 }
 
-.participant-actions {
+.action-buttons {
   display: flex;
   gap: 0.5rem;
 }
 
-.approve-btn {
-  background-color: #28a745;
+.approve-button {
+  background: #28a745;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -49,8 +69,8 @@
   cursor: pointer;
 }
 
-.remove-btn {
-  background-color: #dc3545;
+.remove-button {
+  background: #dc3545;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -60,16 +80,36 @@
 
 .start-quiz-button {
   width: 100%;
-  padding: 1rem;
-  background-color: #6c757d;
+  background: #7556f0;
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 2rem;
   cursor: pointer;
-  margin-top: 1rem;
 }
 
 .start-quiz-button:disabled {
-  opacity: 0.7;
+  background: #ccc;
   cursor: not-allowed;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-code {
+  background: #f4f3ff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.session-code span {
+  font-weight: bold;
+  color: #7556f0;
+  margin-left: 0.5rem;
+  letter-spacing: 1px;
 } 

@@ -24,12 +24,18 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     status: {
-      type: DataTypes.ENUM('waiting', 'approved'),
+      type: DataTypes.ENUM('waiting', 'approved', 'rejected'),
       defaultValue: 'waiting'
     }
   }, {
     tableName: 'Participants',
-    timestamps: true
+    indexes: [
+      {
+        unique: true,
+        fields: ['sessionID', 'userID'],
+        name: 'unique_session_participant'
+      }
+    ]
   });
 
   Participant.associate = function(models) {

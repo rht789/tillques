@@ -180,3 +180,45 @@ exports.refreshToken = async (req, res) => {
     });
   }
 };
+
+// Export getCurrentUser properly
+exports.getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findByPk(userId, {
+      attributes: ['userID', 'username', 'email']
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        id: user.userID,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user data'
+    });
+  }
+};
+
+// Export all functions
+module.exports = {
+  register: exports.register,
+  login: exports.login,
+  getCurrentUser: exports.getCurrentUser,
+  forgetPassword: exports.forgetPassword,
+  resetPassword: exports.resetPassword,
+  refreshToken: exports.refreshToken
+};
