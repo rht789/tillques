@@ -35,7 +35,14 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="nav-container">
         {/* Logo Section */}
-        <div onClick={handleLogoClick} className="brand" style={{ cursor: 'pointer' }}>
+        <div 
+          onClick={handleLogoClick} 
+          className="brand" 
+          style={{ cursor: 'pointer' }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => e.key === 'Enter' && handleLogoClick()}
+        >
           <img src={logo} alt="QuizMaster" className="brand-logo" />
           <span className="brand-text">QuizMaster</span>
         </div>

@@ -31,7 +31,7 @@ const Login = () => {
       const response = await login(formData);
       if (response.success) {
         toast.success('Login successful!');
-        navigate('/');
+        navigate('/home');
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
@@ -43,7 +43,7 @@ const Login = () => {
     try {
       await loginWithGoogle(credentialResponse.credential);
       toast.success('Login successful!');
-      navigate('/');
+      navigate('/home');
     } catch (error) {
       console.error('Google login error:', error);
       toast.error('Google login failed. Please try again.');
