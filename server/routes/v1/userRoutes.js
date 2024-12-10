@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../../controllers/userController');
+const googleAuthController = require('../../controllers/googleAuthController');
 const Joi = require('joi');
 const { authenticateToken } = require('../../middlewares/authMiddleware');
 
@@ -51,5 +52,8 @@ router.post('/refresh-token', userController.refreshToken);
 router.post('/forget-password', validate(schemas.forgetPassword), userController.forgetPassword);
 router.post('/reset-password', validate(schemas.resetPassword), userController.resetPassword);
 router.get('/me', authenticateToken, userController.getCurrentUser);
+
+// Google OAuth route
+router.post('/auth/google', googleAuthController.googleAuth);
 
 module.exports = router;

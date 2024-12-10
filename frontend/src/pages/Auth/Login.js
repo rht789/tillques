@@ -7,6 +7,7 @@ import authService from '../../services/authService';
 import logo from '../../assets/images/logo.png';
 import './login.css';
 import { useAuth } from '../../contexts/AuthContext';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { loginUser, login } = useAuth();
+  const { loginUser, login, loginWithGoogle } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -37,10 +38,37 @@ const Login = () => {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    console.log('Google response:', credentialResponse);
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      toast.success('Login successful!');
+      navigate('/');
+    } catch (error) {
+      console.error('Google login error:', error);
+      toast.error('Google login failed. Please try again.');
+    }
+  };
+
   return (
     <div className="login-card">
       <img src={logo} alt="QuizMaster Logo" className="logo" />
       <h2>Log In to QuizMaster</h2>
+
+      <div className="google-login-container">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => {
+            toast.error('Google login failed');
+          }}
+          size="large"
+          width="100%"
+          text="signin_with"
+          shape="rectangular"
+        />
+      </div>
+
+      <div className="divider">or</div>
 
       <form onSubmit={handleSubmit}>
         <input

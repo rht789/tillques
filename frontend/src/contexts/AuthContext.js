@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import authService from '../services/authService';
+import axios from 'axios';
 
 // Export the context so it can be imported elsewhere
 export const AuthContext = createContext(null);
@@ -42,11 +43,33 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  const loginWithGoogle = async (credential) => {
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/auth/google`, {
+        credential
+      });
+
+      if (response.data.success) {
+        setUser(response.data.data.user);
+        setIsAuthenticated(true);
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Google login error:', error);
+      setIsAuthenticated(false);
+      setUser(null);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
     login,
-    logout
+    logout,
+    loginWithGoogle
   };
 
   return (

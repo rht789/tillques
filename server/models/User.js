@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     refreshToken: {
       type: DataTypes.STRING,
@@ -34,6 +34,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    googleId: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    }
   }, {
     timestamps: true,
     tableName: 'Users',

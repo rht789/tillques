@@ -50,8 +50,27 @@
   }
   
   .divider {
+    text-align: center;
     margin: 20px 0;
-    color: #666;
+    position: relative;
+  }
+  
+  .divider::before,
+  .divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background-color: #ddd;
+  }
+  
+  .divider::before {
+    left: 0;
+  }
+  
+  .divider::after {
+    right: 0;
   }
   
   input[type="email"],
@@ -133,5 +152,10 @@
   
   .signup-prompt a:hover {
     color: #6d40e7;
+  }
+  
+  .google-login-container {
+    width: 100%;
+    margin-bottom: 20px;
   }
   

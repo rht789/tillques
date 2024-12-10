@@ -7,8 +7,11 @@ import { toast } from 'react-toastify';
 import logo from '../../assets/images/logo.png';
 import './signup.css'; // Ensure correct CSS path
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Register = () => {
+  const { loginWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     username: '',  // Added username
     email: '',
@@ -146,14 +149,34 @@ const Register = () => {
     }
   };
 
+  // Add this function to handle Google login success
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      await loginWithGoogle(credentialResponse.credential);
+      toast.success('Registration successful!');
+      navigate('/');
+    } catch (error) {
+      toast.error('Google registration failed. Please try again.');
+    }
+  };
+
   return (
     <div className="signup-card">
       <img src={logo} alt="QuizMaster Logo" className="logo" />
       <h2>Create your account</h2>
 
-      <button className="google-login-btn">
-        <span>G</span> Create with Google
-      </button>
+      <div className="google-login-container">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => {
+            toast.error('Google login failed');
+          }}
+          size="large"
+          width="100%"
+          text="continue_with"
+          shape="rectangular"
+        />
+      </div>
 
       <div className="divider">or</div>
 
