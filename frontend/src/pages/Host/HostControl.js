@@ -4,6 +4,7 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import './styles/HostControl.css';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 
 const HostControl = () => {
   const { sessionId } = useParams();
@@ -11,44 +12,70 @@ const HostControl = () => {
   const [socket, setSocket] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
   const [autoStartTimer, setAutoStartTimer] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const newSocket = io(process.env.REACT_APP_API_URL, {
-      auth: { token },
-      transports: ['websocket']
-    });
+    let newSocket;
+    try {
+      const token = localStorage.getItem('token');
+      newSocket = io(process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000', {
+        auth: { token },
+        transports: ['websocket'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
 
-    newSocket.on('connect', () => {
-      console.log('Connected to host control socket');
-      newSocket.emit('join-session', { sessionId });
-    });
+      newSocket.on('connect', () => {
+        console.log('Connected to socket server');
+        newSocket.emit('join-session', { sessionId });
+      });
 
-    newSocket.on('participant-joined', (participant) => {
-      console.log('Participant joined:', participant);
-      setSessionDetails(prev => ({
-        ...prev,
-        participants: [...(prev?.participants || []), participant]
-      }));
-    });
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        toast.error('Connection to server failed. Retrying...');
+      });
 
-    newSocket.on('session-update', ({ participants }) => {
-      console.log('Session update received:', participants);
-      setSessionDetails(prev => ({
-        ...prev,
-        participants
-      }));
-    });
+      newSocket.on('participant-joined', (participant) => {
+        console.log('Participant joined:', participant);
+        setSessionDetails(prev => ({
+          ...prev,
+          participants: [...(prev?.participants || []), participant]
+        }));
+      });
 
-    setSocket(newSocket);
+      newSocket.on('session-update', ({ participants }) => {
+        console.log('Session update received:', participants);
+        setSessionDetails(prev => ({
+          ...prev,
+          participants
+        }));
+      });
 
-    return () => newSocket.disconnect();
+      newSocket.on('participant-removed', ({ participantId }) => {
+        setSessionDetails(prev => ({
+          ...prev,
+          participants: prev.participants.filter(p => p.id !== participantId)
+        }));
+      });
+
+      setSocket(newSocket);
+
+      return () => {
+        if (newSocket) {
+          newSocket.disconnect();
+        }
+      };
+    } catch (error) {
+      console.error('Socket initialization error:', error);
+      toast.error('Failed to connect to server');
+    }
   }, [sessionId]);
 
   useEffect(() => {
     const fetchSessionDetails = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('token');
         const response = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/v1/sessions/${sessionId}`,
           {
@@ -61,6 +88,7 @@ const HostControl = () => {
         }
       } catch (error) {
         console.error('Error fetching session details:', error);
+        toast.error('Failed to fetch session details');
       }
     };
 
@@ -68,6 +96,11 @@ const HostControl = () => {
   }, [sessionId]);
 
   const handleApprove = (participantId) => {
+    if (!socket?.connected) {
+      toast.error('Not connected to server');
+      return;
+    }
+
     socket.emit('approve-participant', { sessionId, participantId });
     setSessionDetails(prev => ({
       ...prev,
@@ -78,19 +111,27 @@ const HostControl = () => {
   };
 
   const handleRemove = (participantId) => {
+    if (!socket?.connected) {
+      toast.error('Not connected to server');
+      return;
+    }
+
     // Don't allow host to remove themselves
     const participant = sessionDetails.participants.find(p => p.id === participantId);
-    if (participant.userId === user.id) {
+    if (participant.userId === user?.id) {
       toast.error("Host cannot remove themselves");
       return;
     }
 
     socket.emit('remove-participant', { sessionId, participantId });
-    
-    // UI will be updated through socket event listener
   };
 
   const startQuiz = () => {
+    if (!socket?.connected) {
+      toast.error('Not connected to server');
+      return;
+    }
+
     socket.emit('start-quiz', { sessionId });
     setAutoStartTimer(true);
   };
