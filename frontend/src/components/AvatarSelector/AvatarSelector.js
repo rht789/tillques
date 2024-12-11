@@ -10,9 +10,7 @@ import {
   Button,
   Box,
   Typography,
-  IconButton,
-  Select,
-  MenuItem
+  IconButton
 } from '@mui/material';
 import { Close, CloudUpload } from '@mui/icons-material';
 import { PREDEFINED_AVATARS, AVATAR_STYLES } from '../../constants/avatars';
@@ -21,7 +19,6 @@ import './AvatarSelector.css';
 const AvatarSelector = ({ open, onClose, onSelect, currentAvatar }) => {
   const [tab, setTab] = useState(0);
   const [selectedStyle, setSelectedStyle] = useState(AVATAR_STYLES[0]);
-  const [selectedColor, setSelectedColor] = useState('default');
 
   const handleTabChange = (event, newValue) => {
     setTab(newValue);
@@ -43,11 +40,6 @@ const AvatarSelector = ({ open, onClose, onSelect, currentAvatar }) => {
   const filteredAvatars = PREDEFINED_AVATARS.filter(
     avatar => avatar.style === selectedStyle
   );
-
-  const colorOptions = {
-    'Pixel Art': ['default', 'red', 'blue', 'green'],
-    'Minimalist': ['grayscale', 'colorful', 'pastel']
-  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -80,22 +72,6 @@ const AvatarSelector = ({ open, onClose, onSelect, currentAvatar }) => {
                 ))}
               </Tabs>
             </Box>
-            {selectedStyle in colorOptions && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Color Theme</Typography>
-                <Select
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  size="small"
-                >
-                  {colorOptions[selectedStyle].map(color => (
-                    <MenuItem key={color} value={color}>
-                      {color.charAt(0).toUpperCase() + color.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-            )}
             <Grid container spacing={2}>
               {filteredAvatars.map((avatar) => (
                 <Grid item xs={4} sm={3} md={2} key={avatar.id}>
