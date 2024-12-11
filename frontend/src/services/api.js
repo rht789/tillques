@@ -4,20 +4,25 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: `${process.env.REACT_APP_API_URL}/api/v1`,
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 });
 
 // Add request interceptor to add auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
 // Response interceptor
 api.interceptors.response.use(
@@ -32,8 +37,9 @@ api.interceptors.response.use(
     if (error.response?.status === 404 && error.config?.url.includes('/questions')) {
       toast.error('Questions not found for this quiz');
     } else if (error.response?.status === 401) {
-      toast.error('Session expired. Please login again.');
+      // Clear token and redirect to login
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     } else if (error.response?.status === 403) {
       toast.error('Access denied.');

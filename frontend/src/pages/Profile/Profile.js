@@ -24,8 +24,11 @@ import './Profile.css';
 import AvatarSelector from '../../components/AvatarSelector/AvatarSelector';
 import './ProfileEdit.css';
 import { getAvatarUrl } from '../../utils/avatarHelper';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Profile = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [user, setUser] = useState({
     username: '',
     email: '',
@@ -39,7 +42,6 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
-  const navigate = useNavigate();
 
   // Dummy data - to be replaced with real data later
   const stats = {
@@ -78,8 +80,13 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
     fetchUserProfile();
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   const handleAvatarSelect = async (selection) => {
     try {

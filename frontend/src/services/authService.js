@@ -3,23 +3,36 @@
 import api from './api';
 import axios from 'axios';
 
-const authService = {
+export const authService = {
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
+      if (response.data.data.token) {
+        localStorage.setItem('token', response.data.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
       return response.data;
     } catch (error) {
-      throw error;
+      throw error.response?.data || error;
+    }
+  },
+
+  getProfile: async () => {
+    try {
+      const response = await api.get('/users/profile');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
     }
   },
 
   logout: () => {
-    localStorage.removeItem('accessToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
 
   setupAuthHeader: () => {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem('token');
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
@@ -33,7 +46,7 @@ const authService = {
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('accessToken');
+    return !!localStorage.getItem('token');
   },
 
   forgotPassword: async (email) => {
