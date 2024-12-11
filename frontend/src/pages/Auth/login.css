@@ -73,8 +73,8 @@
     right: 0;
   }
   
-  input[type="email"],
-  input[type="password"] {
+  .login-card input[type="email"],
+  .login-card input[type="password"] {
     width: 100%;
     padding: 15px;
     border-radius: 30px;

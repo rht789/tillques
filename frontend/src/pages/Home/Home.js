@@ -13,10 +13,7 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
+  const updateUsername = () => {
     try {
       const userString = localStorage.getItem('user');
       if (userString) {
@@ -26,6 +23,24 @@ const Home = () => {
     } catch (error) {
       console.error('Error parsing user data:', error);
     }
+  };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+    updateUsername();
+
+    // Add event listener for storage changes
+    window.addEventListener('storage', updateUsername);
+    
+    // Add custom event listener for profile updates
+    window.addEventListener('profileUpdated', updateUsername);
+
+    return () => {
+      window.removeEventListener('storage', updateUsername);
+      window.removeEventListener('profileUpdated', updateUsername);
+    };
   }, [isAuthenticated, navigate]);
 
   const handleUsernameClick = () => {

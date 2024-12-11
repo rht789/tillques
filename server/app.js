@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const profileRoutes = require('./routes/v1/profileRoutes');
 const v1Routes = require('./routes/v1');
 
 const app = express();
@@ -11,7 +13,11 @@ app.use(cors({
 
 app.use(express.json());
 
-// Mount all routes under /api/v1
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Mount routes
+app.use('/api/v1/users', profileRoutes);
 app.use('/api/v1', v1Routes);
 
 // Error handling middleware

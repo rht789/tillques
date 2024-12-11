@@ -5,6 +5,8 @@ import QuizList from './components/QuizList';
 import LandingPage from './pages/LandingPage/LandingPage';
 import Home from './pages/Home/Home';
 import Login from './pages/Auth/Login';
+import Profile from './pages/Profile/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
 // ... other imports
 
 const App = () => {
@@ -15,6 +17,7 @@ const App = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/quizzes" element={<QuizList />} />
       <Route path="/host-control/:sessionId" element={<HostControl />} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       {/* ... other routes */}
     </Routes>
   );

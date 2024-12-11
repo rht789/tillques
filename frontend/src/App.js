@@ -28,6 +28,7 @@ import HostControl from './pages/Host/HostControl';
 import JoinQuiz from './pages/Participant/JoinQuiz';
 import WaitingRoom from './pages/Participant/WaitingRoom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Profile from './pages/Profile/Profile';
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -60,6 +61,11 @@ function App() {
                   <Route path="/host-control/:sessionId" element={<ProtectedRoute><HostControl /></ProtectedRoute>} />
                   <Route path="/join-quiz" element={<ProtectedRoute><JoinQuiz /></ProtectedRoute>} />
                   <Route path="/waiting-room/:sessionId" element={<ProtectedRoute><WaitingRoom /></ProtectedRoute>} />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
                 </Routes>
               </main>
               <Footer />
