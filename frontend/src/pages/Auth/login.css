@@ -156,6 +156,13 @@
   
   .google-login-container {
     width: 100%;
-    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  
+  .google-login-container > div {
+    width: 100% !important;
+    max-width: 300px;
   }
   

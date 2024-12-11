@@ -10,38 +10,29 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Home = () => {
   const [username, setUsername] = useState('User');
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-
-  const updateUsername = () => {
-    try {
-      const userString = localStorage.getItem('user');
-      if (userString) {
-        const userData = JSON.parse(userString);
-        setUsername(userData.username);
-      }
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-    }
-  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
     }
-    updateUsername();
 
-    // Add event listener for storage changes
-    window.addEventListener('storage', updateUsername);
-    
-    // Add custom event listener for profile updates
-    window.addEventListener('profileUpdated', updateUsername);
-
-    return () => {
-      window.removeEventListener('storage', updateUsername);
-      window.removeEventListener('profileUpdated', updateUsername);
-    };
-  }, [isAuthenticated, navigate]);
+    if (user?.username) {
+      setUsername(user.username);
+    } else {
+      try {
+        const userString = localStorage.getItem('user');
+        if (userString) {
+          const userData = JSON.parse(userString);
+          setUsername(userData.username);
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, [isAuthenticated, navigate, user]);
 
   const handleUsernameClick = () => {
     navigate('/profile');

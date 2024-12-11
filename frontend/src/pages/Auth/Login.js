@@ -8,6 +8,7 @@ import logo from '../../assets/images/logo.png';
 import './login.css';
 import { useAuth } from '../../contexts/AuthContext';
 import { GoogleLogin } from '@react-oauth/google';
+import api from '../../services/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -16,7 +17,7 @@ const Login = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { loginUser, login, loginWithGoogle } = useAuth();
+  const { loginUser } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
@@ -27,26 +28,36 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      const response = await login(formData);
+      const response = await authService.login(formData);
       if (response.success) {
+        localStorage.setItem('accessToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        loginUser(response.data.user);
         toast.success('Login successful!');
         navigate('/home');
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log('Google response:', credentialResponse);
     try {
-      await loginWithGoogle(credentialResponse.credential);
-      toast.success('Login successful!');
-      navigate('/home');
+      const response = await api.googleAuth(credentialResponse.credential);
+      if (response.success) {
+        localStorage.setItem('accessToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        loginUser(response.data.user);
+        toast.success('Login successful!');
+        navigate('/home');
+      }
     } catch (error) {
       console.error('Google login error:', error);
-      toast.error('Google login failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Google login failed');
     }
   };
 
@@ -62,9 +73,11 @@ const Login = () => {
             toast.error('Google login failed');
           }}
           size="large"
-          width="100%"
+          width="300"
           text="signin_with"
           shape="rectangular"
+          useOneTap={false}
+          cookiePolicy={'single_host_origin'}
         />
       </div>
 

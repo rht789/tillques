@@ -45,4 +45,15 @@ api.interceptors.response.use(
   }
 );
 
+// Add Google auth method
+api.googleAuth = async (credential) => {
+  try {
+    const response = await api.post('/auth/google', { credential });
+    return response.data;
+  } catch (error) {
+    console.error('Google auth error:', error);
+    throw error;
+  }
+};
+
 export default api;

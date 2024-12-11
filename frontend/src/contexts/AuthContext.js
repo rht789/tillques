@@ -1,85 +1,44 @@
 // src/contexts/AuthContext.js
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import authService from '../services/authService';
-import axios from 'axios';
+import React, { createContext, useContext, useState } from 'react';
 
-// Export the context so it can be imported elsewhere
-export const AuthContext = createContext(null);
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('accessToken');
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-      // Set the auth header
-      authService.setupAuthHeader();
-    }
-  }, []);
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('accessToken');
+  });
 
-  const login = async (credentials) => {
-    try {
-      const response = await authService.login(credentials);
-      if (response.success) {
-        setUser(response.data.user);
-        setIsAuthenticated(true);
-      }
-      return response;
-    } catch (error) {
-      setIsAuthenticated(false);
-      setUser(null);
-      throw error;
-    }
+  const loginUser = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = () => {
-    authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-  };
-
-  const loginWithGoogle = async (credential) => {
-    try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/auth/google`, {
-        credential
-      });
-
-      if (response.data.success) {
-        setUser(response.data.data.user);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
-      }
-      return response.data;
-    } catch (error) {
-      console.error('Google login error:', error);
-      setIsAuthenticated(false);
-      setUser(null);
-      throw error;
-    }
-  };
-
-  const value = {
-    user,
-    isAuthenticated,
-    login,
-    logout,
-    loginWithGoogle
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      loginUser, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Create and export the useAuth hook directly from this file
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
