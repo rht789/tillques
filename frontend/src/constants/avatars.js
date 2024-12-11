@@ -137,27 +137,27 @@ export const PREDEFINED_AVATARS = [
   // Abstract Style
   {
     id: 26,
-    url: 'https://source.boringavatars.com/beam/120/Maria?colors=264653,2a9d8f,e9c46a,f4a261,e76f51',
+    url: 'https://api.dicebear.com/7.x/identicon/svg?seed=Maria&backgroundColor=ffdfbf',
     style: 'Abstract'
   },
   {
     id: 27,
-    url: 'https://source.boringavatars.com/pixel/120/James?colors=2b9348,55a630,80b918,aacc00,bfd200',
+    url: 'https://api.dicebear.com/7.x/identicon/svg?seed=James&backgroundColor=b6e3f4',
     style: 'Abstract'
   },
   {
     id: 28,
-    url: 'https://source.boringavatars.com/sunset/120/Alex?colors=390099,9e0059,ff0054,ff5400,ffbd00',
+    url: 'https://api.dicebear.com/7.x/identicon/svg?seed=Alex&backgroundColor=c0aede',
     style: 'Abstract'
   },
   {
     id: 29,
-    url: 'https://source.boringavatars.com/ring/120/Sarah?colors=0466c8,0353a4,023e7d,002855,001845',
+    url: 'https://api.dicebear.com/7.x/identicon/svg?seed=Sarah&backgroundColor=ffd5dc',
     style: 'Abstract'
   },
   {
     id: 30,
-    url: 'https://source.boringavatars.com/marble/120/John?colors=7400b8,6930c3,5e60ce,5390d9,4ea8de',
+    url: 'https://api.dicebear.com/7.x/identicon/svg?seed=John&backgroundColor=d1f4d9',
     style: 'Abstract'
   }
 ];
