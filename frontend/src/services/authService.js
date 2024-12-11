@@ -7,13 +7,34 @@ export const authService = {
   login: async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
-      if (response.data.data.token) {
-        localStorage.setItem('token', response.data.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      if (response.data.success) {
+        const { token, user } = response.data.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
       }
       return response.data;
     } catch (error) {
-      throw error.response?.data || error;
+      console.error('Login error:', error);
+      throw error;
+    }
+  },
+
+  googleAuth: async (credential) => {
+    try {
+      const response = await api.post('/auth/google', { credential });
+      if (response.data.success) {
+        const { token, user } = response.data.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Google auth error:', error);
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error('Google authentication failed');
     }
   },
 

@@ -1,28 +1,99 @@
-const { Session, Participant } = require('../models');
+const { Server } = require('socket.io');
+const socketAuthMiddleware = require('../middlewares/socketAuthMiddleware');
+const { Session, User } = require('../models');
 
-module.exports = (io) => {
-  io.use(require('../middleware/socketMiddleware'));
+module.exports = (server) => {
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      methods: ['GET', 'POST'],
+      credentials: true
+    },
+    path: '/socket.io',
+    transports: ['websocket', 'polling']
+  });
+
+  const activeSessions = new Map();
+
+  io.use(socketAuthMiddleware);
 
   io.on('connection', (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+    console.log('New client connected:', socket.id);
 
-    socket.on('joinRoom', async ({ sessionCode }) => {
+    socket.on('join_session', async ({ sessionId, userId }) => {
       try {
-        const session = await Session.findOne({ where: { sessionCode, isActive: true } });
-        if (!session) throw new Error('Invalid session');
+        console.log(`Client ${socket.id} joining session ${sessionId}`);
+        
+        // Verify session exists
+        const session = await Session.findByPk(sessionId);
+        if (!session) {
+          throw new Error('Session not found');
+        }
 
-        const participant = await Participant.findOne({ where: { sessionId: session.sessionId, userId: socket.user.userId } });
-        if (!participant) throw new Error('User not part of the session');
+        // Get user details
+        const user = await User.findByPk(userId);
+        if (!user) {
+          throw new Error('User not found');
+        }
 
-        socket.join(sessionCode);
-        io.to(sessionCode).emit('userJoined', { userId: socket.user.userId });
-      } catch (err) {
-        socket.emit('error', { message: err.message });
+        // Store user info on socket
+        socket.user = {
+          id: user.userID,
+          username: user.username
+        };
+
+        // Join room
+        const roomId = `session:${sessionId}`;
+        socket.join(roomId);
+
+        // Track session participants
+        if (!activeSessions.has(sessionId)) {
+          activeSessions.set(sessionId, new Set());
+        }
+        activeSessions.get(sessionId).add(socket.id);
+
+        // Notify others
+        socket.to(roomId).emit('participant_joined', {
+          id: socket.id,
+          ...socket.user
+        });
+
+        // Send current participants
+        const participants = Array.from(activeSessions.get(sessionId))
+          .map(sid => {
+            const participantSocket = io.sockets.sockets.get(sid);
+            return participantSocket?.user ? {
+              id: participantSocket.id,
+              ...participantSocket.user
+            } : null;
+          })
+          .filter(Boolean);
+
+        socket.emit('participants_list', participants);
+
+      } catch (error) {
+        console.error('Error in join_session:', error);
+        socket.emit('error', { message: error.message });
       }
     });
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${socket.id}`);
+      console.log('Client disconnected:', socket.id);
+      // Clean up from all sessions
+      activeSessions.forEach((clients, sessionId) => {
+        if (clients.has(socket.id)) {
+          clients.delete(socket.id);
+          io.to(`session:${sessionId}`).emit('participant_left', {
+            id: socket.id,
+            ...socket.user
+          });
+          if (clients.size === 0) {
+            activeSessions.delete(sessionId);
+          }
+        }
+      });
     });
   });
+
+  return io;
 }; 

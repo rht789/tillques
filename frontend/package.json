@@ -28,7 +28,8 @@
     "sequelize": "^6.37.5",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "google-auth-library": "^9.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

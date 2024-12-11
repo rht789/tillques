@@ -28,11 +28,20 @@ exports.googleAuth = async (req, res) => {
         googleId,
         password: null // Google users don't need password
       });
+    } else {
+      // Update existing user's googleId if not set
+      if (!user.googleId) {
+        await user.update({ googleId });
+      }
     }
 
     // Generate JWT token
     const token = jwt.sign(
-      { id: user.userID, email: user.email, username: user.username },
+      { 
+        id: user.userID,
+        email: user.email,
+        username: user.username
+      },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -40,12 +49,12 @@ exports.googleAuth = async (req, res) => {
     res.json({
       success: true,
       data: {
+        token,
         user: {
           id: user.userID,
           email: user.email,
           username: user.username
-        },
-        token
+        }
       }
     });
 

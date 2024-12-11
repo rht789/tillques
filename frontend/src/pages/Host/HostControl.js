@@ -23,17 +23,19 @@ const HostControl = () => {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionDelay: 1000,
+        timeout: 10000
       });
 
       newSocket.on('connect', () => {
         console.log('Connected to socket server');
+        toast.success('Connected to session');
         newSocket.emit('join-session', { sessionId });
       });
 
-      newSocket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        toast.error('Connection to server failed. Retrying...');
+      newSocket.on('error', (error) => {
+        console.error('Socket error:', error);
+        toast.error(error.message || 'Connection error');
       });
 
       newSocket.on('participant-joined', (participant) => {

@@ -9,7 +9,7 @@ import logo from '../../assets/images/logo.png';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -18,17 +18,13 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logoutUser();
     setShowDropdown(false);
-    navigate('/');
+    navigate('/login');
   };
 
   const handleLogoClick = () => {
-    if (isAuthenticated) {
-      navigate('/home');
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   return (
@@ -50,7 +46,7 @@ const Navbar = () => {
         {/* Right Section */}
         <div className="nav-items">
           {/* Search Bar */}
-          {isAuthenticated && (
+          {user && (
             <div className="search-container">
               <Search className="search-icon" />
               <input
@@ -61,7 +57,7 @@ const Navbar = () => {
             </div>
           )}
 
-          {isAuthenticated && (
+          {user && (
             <Link 
               to="/join-quiz"
               className="join-quiz-btn"
@@ -71,7 +67,7 @@ const Navbar = () => {
             </Link>
           )}
 
-          {isAuthenticated ? (
+          {user ? (
             // Logged in state
             <div className="auth-buttons">
               <Link 

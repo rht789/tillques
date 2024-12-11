@@ -32,13 +32,24 @@ const Login = () => {
     try {
       const response = await authService.login(formData);
       if (response.success) {
-        localStorage.setItem('accessToken', response.data.token);
+        // First set the user in localStorage and update auth headers
+        localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        loginUser(response.data.user);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        // Then update the auth context
+        await loginUser(response.data.user);
+        
+        // Show success message
         toast.success('Login successful!');
-        navigate('/home');
+        
+        // Small delay to ensure state is updated before navigation
+        setTimeout(() => {
+          navigate('/home');
+        }, 100);
       }
     } catch (error) {
+      console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Login failed');
     } finally {
       setIsLoading(false);
@@ -47,13 +58,23 @@ const Login = () => {
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const response = await api.googleAuth(credentialResponse.credential);
+      const response = await authService.googleAuth(credentialResponse.credential);
       if (response.success) {
-        localStorage.setItem('accessToken', response.data.token);
+        // First set the user in localStorage and update auth headers
+        localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
-        loginUser(response.data.user);
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        // Then update the auth context
+        await loginUser(response.data.user);
+        
+        // Show success message
         toast.success('Login successful!');
-        navigate('/home');
+        
+        // Small delay to ensure state is updated before navigation
+        setTimeout(() => {
+          navigate('/home');
+        }, 100);
       }
     } catch (error) {
       console.error('Google login error:', error);
@@ -69,15 +90,19 @@ const Login = () => {
       <div className="google-login-container">
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
-          onError={() => {
-            toast.error('Google login failed');
+          onError={(error) => {
+            console.error('Google Sign In error:', error);
+            toast.error('Google login failed. Please try again.');
           }}
+          text="Sign in with Google"
+          shape="rectangular"
           size="large"
           width="300"
-          text="signin_with"
-          shape="rectangular"
+          locale="en"
           useOneTap={false}
+          theme="filled_blue"
           cookiePolicy={'single_host_origin'}
+          clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
         />
       </div>
 

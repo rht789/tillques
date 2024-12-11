@@ -7,7 +7,8 @@ const api = axios.create({
   baseURL: `${process.env.REACT_APP_API_URL}/api/v1`,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 });
 
 // Add request interceptor to add auth token
@@ -28,23 +29,33 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log the full error for debugging
     console.error('API Error:', {
-      endpoint: error.config?.url,
-      status: error.response?.status,
-      message: error.response?.data?.message || error.message
+      config: error.config,
+      response: error.response,
+      message: error.message
     });
 
-    if (error.response?.status === 404 && error.config?.url.includes('/questions')) {
-      toast.error('Questions not found for this quiz');
-    } else if (error.response?.status === 401) {
-      // Clear token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    } else if (error.response?.status === 403) {
-      toast.error('Access denied.');
-    } else {
-      toast.error(error.response?.data?.message || 'An error occurred');
+    if (!error.response) {
+      toast.error('Network error - Please check your connection');
+      return Promise.reject(error);
+    }
+
+    // Handle specific error cases
+    switch (error.response.status) {
+      case 401:
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        break;
+      case 403:
+        toast.error('Access denied');
+        break;
+      case 404:
+        toast.error('Resource not found');
+        break;
+      default:
+        toast.error(error.response?.data?.message || 'An error occurred');
     }
 
     return Promise.reject(error);
